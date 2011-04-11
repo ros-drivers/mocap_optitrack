@@ -1,0 +1,24 @@
+<package>
+  <description brief="Streaming of OptiTrack mocap data to tf">
+    <p>
+    This package contains a node that translates motion capture data from an OptiTrack rig to tf transforms.
+    The node receives the binary packages that are streamed by the Arena software,
+    decodes them and broadcasts the poses of rigid bodies as tf transforms.
+    </p>
+    <p>
+    Currently, this node supports the NatNet streaming protocol v1.4.
+    </p>
+    <p>
+    Copyright (c) 2010, University of Bonn, Computer Science Institute VI<br />
+    All rights reserved.
+    </p>
+  </description>
+  <author>Kathrin Gräve/graeve@ais.uni-bonn.de</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/mocap_optitrack</url>
+  <depend package="roscpp"/>
+  <depend package="tf"/>
+</package>
+
+
