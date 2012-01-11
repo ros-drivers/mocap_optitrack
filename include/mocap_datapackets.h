@@ -40,6 +40,7 @@
 #ifndef __MOCAP_DATAPACKETS_H__
 #define __MOCAP_DATAPACKETS_H__
 
+#include <geometry_msgs/Pose.h>
 #include <sys/types.h>
 #include <iostream>
 #include <string>
@@ -66,13 +67,9 @@ class RigidBody
     ~RigidBody();
 
     int ID;
-    float positionX;
-    float positionY;
-    float positionZ;
-    float quaternionX;
-    float quaternionY;
-    float quaternionZ;
-    float quaternionW;
+    
+    geometry_msgs::Pose pose; 
+
     int NumberOfMarkers;
     Marker *marker;
 };
@@ -125,16 +122,22 @@ class MoCapDataDescription
 class MoCapDataFormat
 {
   public:
-    MoCapDataFormat();
+    MoCapDataFormat(const char *packet, unsigned short length);
     ~MoCapDataFormat();
 
     /// \brief Parses a NatNet data frame packet as it is streamed by the Arena software according to the descriptions in the NatNet SDK v1.4
-    void parse (const char *packet, ushort payload);
+    void parse ();
 
+
+    const char *packet;
+    unsigned short length;
 
     int frameNumber;
     int numModels;
     ModelFrame *model;
+
+  private:
+    void seek(size_t count);
 };
 
 #endif	/*__MOCAP_DATAPACKETS_H__*/

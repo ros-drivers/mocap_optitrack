@@ -14,6 +14,7 @@
 // ROS includes
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
+#include <geometry_msgs/Pose2D.h>
 
 // System includes
 #include <string>
@@ -28,26 +29,26 @@ const std::string MULTICAST_IP = "224.0.0.1";
 const std::string MOCAP_MODEL_KEY = "mocap_model";
 const char ** DEFAULT_MOCAP_MODEL = SKELETON_WITHOUT_TOES;
 
-const int LOCAL_PORT = 1001;
+const int LOCAL_PORT = 1511;
 
 ////////////////////////////////////////////////////////////////////////
 
 void processMocapData( const char** mocap_model )
 {
   UdpMulticastSocket multicast_client_socket( LOCAL_PORT, MULTICAST_IP );
-		
+
   static tf::TransformBroadcaster br;
+  static ros::NodeHandle n;
+  static ros::Publisher pose_3d = n.advertise<geometry_msgs::Pose>("mocap_node/pose", 1000);
+  static ros::Publisher pose_2d = n.advertise<geometry_msgs::Pose2D>("mocap_node/ground_pose", 1000);
 
   ushort payload;
-  MoCapDataFormat format;
   while( true )
-  {	
+  {
     int numberOfPackets = 0;
     bool packetread = false;
 
-    int trials = 0;
-
-    while( !packetread && trials < 100 )
+    while( !packetread )
     {
       int numBytes = 0;
 
@@ -66,9 +67,41 @@ void processMocapData( const char** mocap_model )
 	  if (header == 7)
 	  {
 	    payload = *((ushort*) &buffer[2]);
-	    format.parse(buffer,payload);
+        MoCapDataFormat format(buffer, payload);
+	    format.parse();
 	    packetread = true;
 	    numberOfPackets++;
+
+            if( packetread && format.numModels > 0 )
+            {
+              ros::Time timestamp( ros::Time::now() );
+                                
+              for( int i = 0; i < format.model[0].numRigidBodies; i++ )
+              {
+                // publish 3D pose
+                pose_3d.publish(format.model[0].rigidBodies[i].pose);
+
+                // publish 2D pose
+                geometry_msgs::Pose2D pose;
+                pose.x = format.model[0].rigidBodies[i].pose.position.x;
+                pose.y = format.model[0].rigidBodies[i].pose.position.z;
+                pose.theta = format.model[0].rigidBodies[i].pose.orientation.y;
+                pose_2d.publish(pose);
+
+                // publish transform
+                tf::Transform transform;
+                // Translate mocap data from mm --> m to be compatible with rviz
+                transform.setOrigin( tf::Vector3(format.model[0].rigidBodies[i].pose.position.x / 1000.0f, format.model[0].rigidBodies[i].pose.position.y / 1000.0f, format.model[0].rigidBodies[i].pose.position.z / 1000.0f ) );
+
+                tf::Quaternion q( format.model[0].rigidBodies[i].pose.orientation.x, format.model[0].rigidBodies[i].pose.orientation.y, format.model[0].rigidBodies[i].pose.orientation.z, format.model[0].rigidBodies[i].pose.orientation.w ) ;
+
+                transform.setRotation(q.inverse());             // Handle different coordinate systems (Arena vs. rviz)
+
+                int rigid_body_id = abs(format.model[0].rigidBodies[i].ID);
+                const char* rigid_body_name = mocap_model[rigid_body_id];
+                br.sendTransform(tf::StampedTransform(transform, timestamp, "base_link", std::string( rigid_body_name ) ));
+              }
+            }
 	  }
 	  // else skip packet
 	}
@@ -79,29 +112,7 @@ void processMocapData( const char** mocap_model )
       // Don't try again immediately
       if( !packetread )
       {
-	usleep( 10 );
-	trials++;
-      }
-    }
-		
-    // Once a mocap package has been received and parsed, publish the data using tf
-    if( packetread )
-    {
-      ros::Time timestamp( ros::Time::now() );
-			
-      for( int i = 0; i < format.model[0].numRigidBodies; i++ )
-      {
-	tf::Transform transform;
-	// Translate mocap data from mm --> m to be compatible with rviz
-	transform.setOrigin( tf::Vector3(format.model[0].rigidBodies[i].positionX / 1000.0f,format.model[0].rigidBodies[i].positionY / 1000.0f,format.model[0].rigidBodies[i].positionZ / 1000.0f ) );
-			    
-	tf::Quaternion q( format.model[0].rigidBodies[i].quaternionX, format.model[0].rigidBodies[i].quaternionY, format.model[0].rigidBodies[i].quaternionZ,format.model[0].rigidBodies[i].quaternionW ) ;
-			    
-	transform.setRotation(q.inverse());		// Handle different coordinate systems (Arena vs. rviz)
-			    
-	int rigid_body_id = abs(format.model[0].rigidBodies[i].ID);
-	const char* rigid_body_name = mocap_model[rigid_body_id];
-	br.sendTransform(tf::StampedTransform(transform, timestamp, "base_link", std::string( rigid_body_name ) ));
+        usleep( 10 );
       }
     }
   }

@@ -15,40 +15,45 @@ Marker::~Marker()
 }
 
 
-RigidBody::RigidBody()
+RigidBody::RigidBody() 
+  : pose(), marker(0)
 {
 }
 
 RigidBody::~RigidBody()
 {
+  delete[] marker;
 }
 
 ModelDescription::ModelDescription()
+  : markerNames(0)
 {
 }
 
 ModelDescription::~ModelDescription()
 {
+  delete[] markerNames;
 }
 
 ModelFrame::ModelFrame()
+  : markers(0), otherMarkers(0), rigidBodies(0)
 {
 }
 
 ModelFrame::~ModelFrame()
 {
+  delete[] markers;
+  delete[] otherMarkers;
+  delete[] rigidBodies;
 }
 
 MoCapDataDescription::MoCapDataDescription()
+  : model(0)
 {
 }
 
 MoCapDataDescription::~MoCapDataDescription()
 {
-  for (int i = 0; i < numDatasets; i++)
-  {
-    delete [] model[i].markerNames;
-  }
   delete [] model;
 }
 
@@ -103,125 +108,106 @@ void MoCapDataDescription::parse(const char *packet, ushort payload)
 }
 
 
-MoCapDataFormat::MoCapDataFormat()
+MoCapDataFormat::MoCapDataFormat(const char *packet, unsigned short length) 
+  : packet(packet), length(length)
 {
 }
 
 MoCapDataFormat::~MoCapDataFormat()
 {
-  for (int i = 0; i< numModels; i++)
-  {
-    delete[] model[i].markers;
-    delete[] model[i].otherMarkers;
-    for (int k = 0; k < model[i].numRigidBodies;k++)
-    {
-      delete[] model[i].rigidBodies[k].marker;
-    }
-    delete[] model[i].rigidBodies;
-  }
   delete[] model;
 }
 
- void MoCapDataFormat::parse(const char *packet, ushort payload)
+void MoCapDataFormat::seek(size_t count)
 {
-  ushort parsingPosition = 4;	// bytes
+  packet += count;
+  length -= count;
+}
 
+void MoCapDataFormat::parse()
+{
+  seek(4);
+  
   // parse frame number
-  frameNumber = *((int*) &packet[parsingPosition]);
-  parsingPosition += 4;
+  frameNumber = *((int*) packet);
+  seek(sizeof(int));
 
-  // count number of datasets
-  numModels = *((int*) &packet[parsingPosition]);
-  parsingPosition += 4;
+  // count number of packetsets
+  numModels = *((int*) packet);
+  seek(sizeof(int));
 
   model = new ModelFrame[numModels];
   for (int i = 0; i < numModels; i++)
   {
-    for(ushort j = parsingPosition; j < payload;j++)
+    while (*packet != '\0')
     {
-      if (packet[j] == '\0' )
-      {
-	// read model's name
-	model[i].name = &packet[parsingPosition];
-	parsingPosition = j + 1;
-	break;
-      }
+      model[i].name.push_back(*packet);
+      seek(1);
     }
+    seek(1);
+
     // read number of markers that belong to the model
-    model[i].numMarkers = *((int*) &packet[parsingPosition]);
-    parsingPosition += 4;
+    model[i].numMarkers = *((int*) packet);
+    seek(sizeof(int));
+
     model[i].markers = new Marker[model[i].numMarkers];
     for (int k = 0; k < model[i].numMarkers; k++)
     {
       // read marker positions
-      model[i].markers[k].positionX = *((float*) &packet[parsingPosition]);
-      parsingPosition += 4;
-      model[i].markers[k].positionY = *((float*) &packet[parsingPosition]);
-      parsingPosition += 4;
-      model[i].markers[k].positionZ = *((float*) &packet[parsingPosition]);
-      parsingPosition += 4;
+      model[i].markers[k] = *((Marker*) packet);
+      seek(sizeof(Marker));
     }
 		 
     // read number of 'other' markers (cf. NatNet specs)
-    model[i].numOtherMarkers = *((int*) &packet[parsingPosition]);
-    parsingPosition += 4;
-    model[i].otherMarkers = new Marker[model[i].numMarkers];
+    model[i].numOtherMarkers = *((int*) packet);
+    seek(sizeof(int));
+    model[i].otherMarkers = new Marker[model[i].numOtherMarkers];
     for (int l = 0; l < model[i].numOtherMarkers; l++)
     {
       // read positions of 'other' markers
-      model[i].markers[l].positionX = *((float*) &packet[parsingPosition]);
-      parsingPosition += 4;
-      model[i].markers[l].positionY = *((float*) &packet[parsingPosition]);
-      parsingPosition += 4;
-      model[i].markers[l].positionZ = *((float*) &packet[parsingPosition]);
-      parsingPosition += 4;
+      model[i].markers[l] = *((Marker*) packet);
+      seek(sizeof(Marker));
     }
 		 
     // read number of rigid bodies of the model
-    model[i].numRigidBodies = *((int*) &packet[parsingPosition]);
-    parsingPosition += 4;
+    model[i].numRigidBodies = *((int*) packet);
+    seek(sizeof(int));
     model[i].rigidBodies = new RigidBody [model[i].numRigidBodies];
-    for (int m = 0; m < model[i].numRigidBodies; m++ )
+    for (int m = 0; m < model[i].numRigidBodies; m++)
     {
       // read id, position and orientation of each rigid body
-      model[i].rigidBodies[m].ID =  *((int*) &packet[parsingPosition]);
-      parsingPosition += 4;
-      model[i].rigidBodies[m].positionX =  *((float*) &packet[parsingPosition]);
-      parsingPosition += 4;
-      model[i].rigidBodies[m].positionY =  *((float*) &packet[parsingPosition]);
-      parsingPosition += 4;
-      model[i].rigidBodies[m].positionZ =  *((float*) &packet[parsingPosition]);
-      parsingPosition += 4;
-      model[i].rigidBodies[m].quaternionX =  *((float*) &packet[parsingPosition]);
-      parsingPosition += 4;
-      model[i].rigidBodies[m].quaternionY =  *((float*) &packet[parsingPosition]);
-      parsingPosition += 4;
-      model[i].rigidBodies[m].quaternionZ =  *((float*) &packet[parsingPosition]);
-      parsingPosition += 4;
-      model[i].rigidBodies[m].quaternionW =  *((float*) &packet[parsingPosition]);
-      parsingPosition += 4;
+      model[i].rigidBodies[m].ID =  *((int*) packet);
+      seek(sizeof(int));
+      model[i].rigidBodies[m].pose.position.x =  *((float*) packet);
+      seek(sizeof(float));
+      model[i].rigidBodies[m].pose.position.y =  *((float*) packet);
+      seek(sizeof(float));
+      model[i].rigidBodies[m].pose.position.z =  *((float*) packet);
+      seek(sizeof(float));
+      model[i].rigidBodies[m].pose.orientation.x =  *((float*) packet);
+      seek(sizeof(float));
+      model[i].rigidBodies[m].pose.orientation.y =  *((float*) packet);
+      seek(sizeof(float));
+      model[i].rigidBodies[m].pose.orientation.z =  *((float*) packet);
+      seek(sizeof(float));
+      model[i].rigidBodies[m].pose.orientation.w =  *((float*) packet);
+      seek(sizeof(float));
 
       // get number of markers per rigid body
-      model[i].rigidBodies[m].NumberOfMarkers =  *((int*) &packet[parsingPosition]);
-      parsingPosition += 4;
+      model[i].rigidBodies[m].NumberOfMarkers =  *((int*) packet);
+      seek(sizeof(int));
       model[i].rigidBodies[m].marker = new Marker [model[i].rigidBodies[m].NumberOfMarkers];
       for (int n = 0; n < model[i].rigidBodies[m].NumberOfMarkers; n++)
       {
-	// get position for each marker
-	model[i].rigidBodies[m].marker[n].positionX = *((float*) &packet[parsingPosition]);
-	parsingPosition += 4;
-	model[i].rigidBodies[m].marker[n].positionY = *((float*) &packet[parsingPosition]);
-	parsingPosition += 4;
-	model[i].rigidBodies[m].marker[n].positionZ = *((float*) &packet[parsingPosition]);
-	parsingPosition += 4;
+        // get position for each marker
+        model[i].markers[n] = *((Marker*) packet);
+        seek(sizeof(Marker));
       }
 
     }
     // get latency
-    model[i].latency = *((float*) &packet[parsingPosition]);
-    parsingPosition += 4;
-    parsingPosition += 4;		// skip terminating 0x00 00 00 00
-
+    model[i].latency = *((float*) packet);
+    seek(sizeof(float));
   }
 
 }
