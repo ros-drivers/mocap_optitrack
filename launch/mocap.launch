@@ -3,7 +3,7 @@
 	type="mocap_node" 
 	name="mocap_node" 
 	respawn="false"
-	launch-prefix="xterm -title mocap_node -e sudo -E"
+	launch-prefix=""
 	required="true">
 	<rosparam file="$(find mocap_optitrack)/config/mocap.yaml" command="load" />
   </node>
