@@ -1,2 +1,5 @@
 
 mocap_model: 'SKELETON_WITHOUT_TOES'
+publish_transform: No
+publish_pose: No
+publish_ground_pose: No

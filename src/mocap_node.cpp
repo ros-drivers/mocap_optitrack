@@ -13,6 +13,7 @@
 
 // ROS includes
 #include <ros/ros.h>
+#include <tf/transform_datatypes.h>
 #include <tf/transform_broadcaster.h>
 #include <geometry_msgs/Pose2D.h>
 
@@ -27,7 +28,13 @@
 const std::string MULTICAST_IP = "224.0.0.1";
 
 const std::string MOCAP_MODEL_KEY = "mocap_model";
+const std::string PUBLISH_TRANSFORM_KEY = "publish_transform";
+const std::string PUBLISH_POSE_KEY = "publish_pose";
+const std::string PUBLISH_GROUND_POSE_KEY = "publish_ground_pose";
 const char ** DEFAULT_MOCAP_MODEL = SKELETON_WITHOUT_TOES;
+bool publish_transform = true;
+bool publish_pose = true;
+bool publish_ground_pose = true;
 
 const int LOCAL_PORT = 1511;
 
@@ -54,23 +61,23 @@ void processMocapData( const char** mocap_model )
 
       do
       {
-	// Receive data form mocap device
-	numBytes = multicast_client_socket.recv();
+        // Receive data form mocap device
+        numBytes = multicast_client_socket.recv();
 
-	// Parse mocap data
-	if( numBytes > 0 )
-	{
-	  const char* buffer = multicast_client_socket.getBuffer();
-	  unsigned short header = *((unsigned short*)(&buffer[0]));
-					
-	  // Look for the beginning of a NatNet package
-	  if (header == 7)
-	  {
-	    payload = *((ushort*) &buffer[2]);
-        MoCapDataFormat format(buffer, payload);
-	    format.parse();
-	    packetread = true;
-	    numberOfPackets++;
+        // Parse mocap data
+        if( numBytes > 0 )
+        {
+          const char* buffer = multicast_client_socket.getBuffer();
+          unsigned short header = *((unsigned short*)(&buffer[0]));
+
+          // Look for the beginning of a NatNet package
+          if (header == 7)
+          {
+            payload = *((ushort*) &buffer[2]);
+            MoCapDataFormat format(buffer, payload);
+            format.parse();
+            packetread = true;
+            numberOfPackets++;
 
             if( packetread && format.numModels > 0 )
             {
@@ -79,32 +86,38 @@ void processMocapData( const char** mocap_model )
               for( int i = 0; i < format.model[0].numRigidBodies; i++ )
               {
                 // publish 3D pose
-                pose_3d.publish(format.model[0].rigidBodies[i].pose);
+                if(publish_pose)
+                  pose_3d.publish(format.model[0].rigidBodies[i].pose);
 
                 // publish 2D pose
                 geometry_msgs::Pose2D pose;
                 pose.x = format.model[0].rigidBodies[i].pose.position.x;
-                pose.y = format.model[0].rigidBodies[i].pose.position.z;
-                pose.theta = format.model[0].rigidBodies[i].pose.orientation.y;
-                pose_2d.publish(pose);
+                pose.y = -format.model[0].rigidBodies[i].pose.position.z;
+
+                tf::Quaternion q( format.model[0].rigidBodies[i].pose.orientation.x, format.model[0].rigidBodies[i].pose.orientation.z, format.model[0].rigidBodies[i].pose.orientation.y, format.model[0].rigidBodies[i].pose.orientation.w ) ;
+
+                double roll, pitch, yaw;
+                btMatrix3x3(q).getEulerYPR(yaw, pitch, roll);
+                pose.theta = yaw;
+                if(publish_ground_pose)
+                  pose_2d.publish(pose);
 
                 // publish transform
                 tf::Transform transform;
                 // Translate mocap data from mm --> m to be compatible with rviz
                 transform.setOrigin( tf::Vector3(format.model[0].rigidBodies[i].pose.position.x / 1000.0f, format.model[0].rigidBodies[i].pose.position.y / 1000.0f, format.model[0].rigidBodies[i].pose.position.z / 1000.0f ) );
 
-                tf::Quaternion q( format.model[0].rigidBodies[i].pose.orientation.x, format.model[0].rigidBodies[i].pose.orientation.y, format.model[0].rigidBodies[i].pose.orientation.z, format.model[0].rigidBodies[i].pose.orientation.w ) ;
-
                 transform.setRotation(q.inverse());             // Handle different coordinate systems (Arena vs. rviz)
 
                 int rigid_body_id = abs(format.model[0].rigidBodies[i].ID);
                 const char* rigid_body_name = mocap_model[rigid_body_id];
-                br.sendTransform(tf::StampedTransform(transform, timestamp, "base_link", std::string( rigid_body_name ) ));
+                if(publish_transform)
+                  br.sendTransform(tf::StampedTransform(transform, timestamp, "base_link", std::string( rigid_body_name ) ));
               }
             }
-	  }
-	  // else skip packet
-	}
+          }
+          // else skip packet
+        }
 
 
       } while( numBytes > 0 );
@@ -136,14 +149,17 @@ int main( int argc, char* argv[] )
     if( n.getParam( MOCAP_MODEL_KEY, tmp ) )
     {
       if( tmp == "SKELETON_WITH_TOES" )
-	mocap_model = SKELETON_WITH_TOES;
+        mocap_model = SKELETON_WITH_TOES;
       else if( tmp == "SKELETON_WITHOUT_TOES" )
-	mocap_model = SKELETON_WITHOUT_TOES;
+        mocap_model = SKELETON_WITHOUT_TOES;
       else if( tmp == "OBJECT" )
-	mocap_model = OBJECT;
+        mocap_model = OBJECT;
     }
   }
-  
+  n.getParam(PUBLISH_TRANSFORM_KEY, publish_transform);
+  n.getParam(PUBLISH_POSE_KEY, publish_pose);
+  n.getParam(PUBLISH_GROUND_POSE_KEY, publish_ground_pose);
+
   // Process mocap data until SIGINT
   processMocapData( mocap_model );
 
