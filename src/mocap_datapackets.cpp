@@ -68,12 +68,10 @@ void MoCapDataFormat::parse()
   seek(4);
   
   // parse frame number
-  frameNumber = *((int*) packet);
-  seek(sizeof(int));
+  read_and_seek(frameNumber);
 
   // count number of packetsets
-  numModels = *((int*) packet);
-  seek(sizeof(int));
+  read_and_seek(numModels);
 
   model = new ModelFrame[numModels];
   for (int i = 0; i < numModels; i++)
@@ -86,67 +84,58 @@ void MoCapDataFormat::parse()
     seek(1);
 
     // read number of markers that belong to the model
-    model[i].numMarkers = *((int*) packet);
-    seek(sizeof(int));
+    read_and_seek(model[i].numMarkers);
+      printf("NumMarkers: %d\n", model[i].numMarkers);
 
     model[i].markers = new Marker[model[i].numMarkers];
     for (int k = 0; k < model[i].numMarkers; k++)
     {
       // read marker positions
-      model[i].markers[k] = *((Marker*) packet);
-      seek(sizeof(Marker));
+      read_and_seek(model[i].markers[k]);
     }
  
     // read number of 'other' markers (cf. NatNet specs)
-    model[i].numOtherMarkers = *((int*) packet);
-    seek(sizeof(int));
+    read_and_seek(model[i].numOtherMarkers);
     model[i].otherMarkers = new Marker[model[i].numOtherMarkers];
     for (int l = 0; l < model[i].numOtherMarkers; l++)
     {
       // read positions of 'other' markers
-      model[i].otherMarkers[l] = *((Marker*) packet);
-      seek(sizeof(Marker));
+      read_and_seek(model[i].otherMarkers[l]);
     }
  
     // read number of rigid bodies of the model
-    model[i].numRigidBodies = *((int*) packet);
-    seek(sizeof(int));
+    read_and_seek(model[i].numRigidBodies);
+      printf("NumRigidBodies: %d\n", model[i].numRigidBodies);
+
     model[i].rigidBodies = new RigidBody[model[i].numRigidBodies];
     for (int m = 0; m < model[i].numRigidBodies; m++)
     {
       // read id, position and orientation of each rigid body
-      model[i].rigidBodies[m].ID =  *((int*) packet);
-      seek(sizeof(int));
-      model[i].rigidBodies[m].pose.position.x =  *((float*) packet);
-      seek(sizeof(float));
-      model[i].rigidBodies[m].pose.position.y =  *((float*) packet);
-      seek(sizeof(float));
-      model[i].rigidBodies[m].pose.position.z =  *((float*) packet);
-      seek(sizeof(float));
-      model[i].rigidBodies[m].pose.orientation.x =  *((float*) packet);
-      seek(sizeof(float));
-      model[i].rigidBodies[m].pose.orientation.y =  *((float*) packet);
-      seek(sizeof(float));
-      model[i].rigidBodies[m].pose.orientation.z =  *((float*) packet);
-      seek(sizeof(float));
-      model[i].rigidBodies[m].pose.orientation.w =  *((float*) packet);
-      seek(sizeof(float));
+      read_and_seek(model[i].rigidBodies[m].ID);
+      read_and_seek(model[i].rigidBodies[m].pose.position.x);
+      read_and_seek(model[i].rigidBodies[m].pose.position.y);
+      read_and_seek(model[i].rigidBodies[m].pose.position.z);
+      read_and_seek(model[i].rigidBodies[m].pose.orientation.x);
+      read_and_seek(model[i].rigidBodies[m].pose.orientation.y);
+      read_and_seek(model[i].rigidBodies[m].pose.orientation.z);
+      read_and_seek(model[i].rigidBodies[m].pose.orientation.w);
 
       // get number of markers per rigid body
-      model[i].rigidBodies[m].NumberOfMarkers =  *((int*) packet);
-      seek(sizeof(int));
-      model[i].rigidBodies[m].marker = new Marker [model[i].rigidBodies[m].NumberOfMarkers];
-      for (int n = 0; n < model[i].rigidBodies[m].NumberOfMarkers; n++)
+      read_and_seek(model[i].rigidBodies[m].NumberOfMarkers);
+      printf("NumRBMarkers: %d\n", model[i].rigidBodies[m].NumberOfMarkers);
+      if (model[i].rigidBodies[m].NumberOfMarkers > 0 && 0)
       {
-        // get position for each marker
-        model[i].rigidBodies[m].marker[n] = *((Marker*) packet);
-        seek(sizeof(Marker));
+          model[i].rigidBodies[m].marker = new Marker [model[i].rigidBodies[m].NumberOfMarkers];
+          for (int n = 0; n < model[i].rigidBodies[m].NumberOfMarkers; n++)
+          {
+            // get position for each marker
+            read_and_seek(model[i].rigidBodies[m].marker[n]);
+          }
       }
 
     }
     // get latency
-    model[i].latency = *((float*) packet);
-    seek(sizeof(float));
+    read_and_seek(model[i].latency);
   }
 
 }

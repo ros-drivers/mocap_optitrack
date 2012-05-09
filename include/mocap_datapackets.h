@@ -138,6 +138,11 @@ class MoCapDataFormat
 
   private:
     void seek(size_t count);
+    template <typename T> void read_and_seek(T& target)
+    {
+        target = *((T*) packet);
+        seek(sizeof(T));
+    }
 };
 
 #endif	/*__MOCAP_DATAPACKETS_H__*/
