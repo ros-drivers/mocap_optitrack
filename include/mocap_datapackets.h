@@ -86,6 +86,16 @@ class ModelDescription
     string *markerNames;
 };
 
+class MarkerSet
+{
+  public:
+    MarkerSet() : markers(0) {}
+    ~MarkerSet() { delete[] markers; }
+    char name[256];
+    int numMarkers;
+    Marker *markers;
+};
+
 /// \brief Data object holding poses of a tracked model's components
 class ModelFrame
 {
@@ -93,9 +103,8 @@ class ModelFrame
     ModelFrame();
     ~ModelFrame();
 
-    string name;
-    int numMarkers;
-    Marker *markers;
+    int numMarkerSets;
+    MarkerSet *markerSets;
     int numOtherMarkers;
     Marker *otherMarkers;
     int numRigidBodies;
@@ -134,7 +143,7 @@ class MoCapDataFormat
 
     int frameNumber;
     int numModels;
-    ModelFrame *model;
+    ModelFrame model;
 
   private:
     void seek(size_t count);

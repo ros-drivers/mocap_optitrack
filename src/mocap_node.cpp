@@ -83,18 +83,18 @@ void processMocapData( const char** mocap_model )
             {
               ros::Time timestamp( ros::Time::now() );
                                 
-              for( int i = 0; i < format.model[0].numRigidBodies; i++ )
+              for( int i = 0; i < format.model.numRigidBodies; i++ )
               {
                 // publish 3D pose
                 if(publish_pose)
-                  pose_3d.publish(format.model[0].rigidBodies[i].pose);
+                  pose_3d.publish(format.model.rigidBodies[i].pose);
 
                 // publish 2D pose
                 geometry_msgs::Pose2D pose;
-                pose.x = format.model[0].rigidBodies[i].pose.position.x;
-                pose.y = -format.model[0].rigidBodies[i].pose.position.z;
+                pose.x = format.model.rigidBodies[i].pose.position.x;
+                pose.y = -format.model.rigidBodies[i].pose.position.z;
 
-                tf::Quaternion q( format.model[0].rigidBodies[i].pose.orientation.x, format.model[0].rigidBodies[i].pose.orientation.z, format.model[0].rigidBodies[i].pose.orientation.y, format.model[0].rigidBodies[i].pose.orientation.w ) ;
+                tf::Quaternion q( format.model.rigidBodies[i].pose.orientation.x, format.model.rigidBodies[i].pose.orientation.z, format.model.rigidBodies[i].pose.orientation.y, format.model.rigidBodies[i].pose.orientation.w ) ;
 
                 double roll, pitch, yaw;
                 btMatrix3x3(q).getEulerYPR(yaw, pitch, roll);
@@ -105,11 +105,11 @@ void processMocapData( const char** mocap_model )
                 // publish transform
                 tf::Transform transform;
                 // Translate mocap data from mm --> m to be compatible with rviz
-                transform.setOrigin( tf::Vector3(format.model[0].rigidBodies[i].pose.position.x / 1000.0f, format.model[0].rigidBodies[i].pose.position.y / 1000.0f, format.model[0].rigidBodies[i].pose.position.z / 1000.0f ) );
+                transform.setOrigin( tf::Vector3(format.model.rigidBodies[i].pose.position.x / 1000.0f, format.model.rigidBodies[i].pose.position.y / 1000.0f, format.model.rigidBodies[i].pose.position.z / 1000.0f ) );
 
                 transform.setRotation(q.inverse());             // Handle different coordinate systems (Arena vs. rviz)
 
-                int rigid_body_id = abs(format.model[0].rigidBodies[i].ID);
+                int rigid_body_id = abs(format.model.rigidBodies[i].ID);
                 const char* rigid_body_name = mocap_model[rigid_body_id];
                 if(publish_transform)
                   br.sendTransform(tf::StampedTransform(transform, timestamp, "base_link", std::string( rigid_body_name ) ));
