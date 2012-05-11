@@ -9,6 +9,7 @@
 // Local includes
 #include "Socket.h"
 #include "mocap_datapackets.h"
+#include "mocap_config.h"
 #include "skeletons.h"
 
 // ROS includes
@@ -40,14 +41,9 @@ const int LOCAL_PORT = 1511;
 
 ////////////////////////////////////////////////////////////////////////
 
-void processMocapData( const char** mocap_model )
+void processMocapData( const char** mocap_model, RigidBodyMap& published_rigid_bodies)
 {
   UdpMulticastSocket multicast_client_socket( LOCAL_PORT, MULTICAST_IP );
-
-  static tf::TransformBroadcaster br;
-  static ros::NodeHandle n;
-  static ros::Publisher pose_3d = n.advertise<geometry_msgs::Pose>("mocap_node/pose", 1000);
-  static ros::Publisher pose_2d = n.advertise<geometry_msgs::Pose2D>("mocap_node/ground_pose", 1000);
 
   ushort payload;
   while( true )
@@ -61,7 +57,7 @@ void processMocapData( const char** mocap_model )
 
       do
       {
-        // Receive data form mocap device
+        // Receive data from mocap device
         numBytes = multicast_client_socket.recv();
 
         // Parse mocap data
@@ -79,40 +75,17 @@ void processMocapData( const char** mocap_model )
             packetread = true;
             numberOfPackets++;
 
-            if( packetread && format.numModels > 0 )
+            if( format.numModels > 0 )
             {
-              ros::Time timestamp( ros::Time::now() );
-                                
               for( int i = 0; i < format.model.numRigidBodies; i++ )
               {
-                // publish 3D pose
-                if(publish_pose)
-                  pose_3d.publish(format.model.rigidBodies[i].pose);
+                int ID = format.model.rigidBodies[i].ID;
+                RigidBodyMap::iterator item = published_rigid_bodies.find(ID);
 
-                // publish 2D pose
-                geometry_msgs::Pose2D pose;
-                pose.x = format.model.rigidBodies[i].pose.position.x;
-                pose.y = -format.model.rigidBodies[i].pose.position.z;
-
-                tf::Quaternion q( format.model.rigidBodies[i].pose.orientation.x, format.model.rigidBodies[i].pose.orientation.z, format.model.rigidBodies[i].pose.orientation.y, format.model.rigidBodies[i].pose.orientation.w ) ;
-
-                double roll, pitch, yaw;
-                btMatrix3x3(q).getEulerYPR(yaw, pitch, roll);
-                pose.theta = yaw;
-                if(publish_ground_pose)
-                  pose_2d.publish(pose);
-
-                // publish transform
-                tf::Transform transform;
-                // Translate mocap data from mm --> m to be compatible with rviz
-                transform.setOrigin( tf::Vector3(format.model.rigidBodies[i].pose.position.x / 1000.0f, format.model.rigidBodies[i].pose.position.y / 1000.0f, format.model.rigidBodies[i].pose.position.z / 1000.0f ) );
-
-                transform.setRotation(q.inverse());             // Handle different coordinate systems (Arena vs. rviz)
-
-                int rigid_body_id = abs(format.model.rigidBodies[i].ID);
-                const char* rigid_body_name = mocap_model[rigid_body_id];
-                if(publish_transform)
-                  br.sendTransform(tf::StampedTransform(transform, timestamp, "base_link", std::string( rigid_body_name ) ));
+                if (item != published_rigid_bodies.end())
+                {
+                    item->second.publish(format.model.rigidBodies[i]);
+                }
               }
             }
           }
@@ -156,12 +129,38 @@ int main( int argc, char* argv[] )
         mocap_model = OBJECT;
     }
   }
+
+  RigidBodyMap published_rigid_bodies;
+
+  if (n.hasParam("rigid_bodies"))
+  {
+      XmlRpc::XmlRpcValue body_list;
+      n.getParam("rigid_bodies", body_list);
+      if (body_list.getType() == XmlRpc::XmlRpcValue::TypeStruct && body_list.size() > 0)
+      {
+          XmlRpc::XmlRpcValue::iterator i;
+          for (i = body_list.begin(); i != body_list.end(); ++i) {
+              if (i->second.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
+                  PublishedRigidBody body(i->second);
+                  string id = (string&) (i->first);
+                  RigidBodyItem item(atoi(id.c_str()), body);
+
+                  std::pair<RigidBodyMap::iterator, bool> result = published_rigid_bodies.insert(item);
+                  if (!result.second)
+                  {
+                      ROS_ERROR("Could not insert configuration for rigid body ID %s", id.c_str());
+                  }
+              }
+          }
+      }
+  }
+
   n.getParam(PUBLISH_TRANSFORM_KEY, publish_transform);
   n.getParam(PUBLISH_POSE_KEY, publish_pose);
   n.getParam(PUBLISH_GROUND_POSE_KEY, publish_ground_pose);
 
   // Process mocap data until SIGINT
-  processMocapData( mocap_model );
+  processMocapData( mocap_model, published_rigid_bodies);
 
   return 0;
 }

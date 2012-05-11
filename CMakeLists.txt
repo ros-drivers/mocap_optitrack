@@ -19,6 +19,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 SET( MOCAP_SRCS
   src/mocap_datapackets.cpp
+  src/mocap_config.cpp
   src/Socket.cpp
   src/mocap_node.cpp
 )
