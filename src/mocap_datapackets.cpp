@@ -112,13 +112,21 @@ void MoCapDataFormat::parse()
   {
     // read id, position and orientation of each rigid body
     read_and_seek(model.rigidBodies[m].ID);
-    read_and_seek((float&) model.rigidBodies[m].pose.position.x);
-    read_and_seek((float&) model.rigidBodies[m].pose.position.y);
-    read_and_seek((float&) model.rigidBodies[m].pose.position.z);
-    read_and_seek((float&) model.rigidBodies[m].pose.orientation.x);
-    read_and_seek((float&) model.rigidBodies[m].pose.orientation.y);
-    read_and_seek((float&) model.rigidBodies[m].pose.orientation.z);
-    read_and_seek((float&) model.rigidBodies[m].pose.orientation.w);
+    float temp_data = 0;
+    read_and_seek(temp_data); 
+    model.rigidBodies[m].pose.position.x = temp_data;
+    read_and_seek(temp_data); 
+    model.rigidBodies[m].pose.position.y = temp_data;
+    read_and_seek(temp_data); 
+    model.rigidBodies[m].pose.position.z = temp_data;
+    read_and_seek(temp_data); 
+    model.rigidBodies[m].pose.orientation.x = temp_data;
+    read_and_seek(temp_data); 
+    model.rigidBodies[m].pose.orientation.y = temp_data;
+    read_and_seek(temp_data); 
+    model.rigidBodies[m].pose.orientation.z = temp_data;
+    read_and_seek(temp_data); 
+    model.rigidBodies[m].pose.orientation.w = temp_data;
 
     // get number of markers per rigid body
     read_and_seek(model.rigidBodies[m].NumberOfMarkers);
