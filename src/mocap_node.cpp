@@ -29,9 +29,6 @@
 const std::string MULTICAST_IP = "224.0.0.1";
 
 const std::string MOCAP_MODEL_KEY = "mocap_model";
-const std::string PUBLISH_TRANSFORM_KEY = "publish_transform";
-const std::string PUBLISH_POSE_KEY = "publish_pose";
-const std::string PUBLISH_GROUND_POSE_KEY = "publish_ground_pose";
 const char ** DEFAULT_MOCAP_MODEL = SKELETON_WITHOUT_TOES;
 bool publish_transform = true;
 bool publish_pose = true;
@@ -91,8 +88,6 @@ void processMocapData( const char** mocap_model, RigidBodyMap& published_rigid_b
           }
           // else skip packet
         }
-
-
       } while( numBytes > 0 );
 
       // Don't try again immediately

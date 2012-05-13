@@ -5,16 +5,6 @@
 #include <iostream>
 using namespace std;
 
-
-Marker::Marker()
-{
-}
-
-Marker::~Marker()
-{
-}
-
-
 RigidBody::RigidBody() 
   : pose(), marker(0)
 {

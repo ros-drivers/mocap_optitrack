@@ -40,7 +40,6 @@
 #ifndef __MOCAP_DATAPACKETS_H__
 #define __MOCAP_DATAPACKETS_H__
 
-#include <geometry_msgs/Pose.h>
 #include <sys/types.h>
 #include <iostream>
 #include <string>
@@ -51,12 +50,25 @@ using namespace std;
 class Marker
 {
   public:
-    Marker();
-    ~Marker();
-
     float positionX;
     float positionY;
     float positionZ;
+};
+
+class Pose
+{
+  public:
+    struct {
+      float x;
+      float y;
+      float z;
+    } position;
+    typedef struct {
+      float x;
+      float y;
+      float z;
+      float w;
+    } orientation;
 };
 
 /// \brief Data object holding information about a single rigid body within a mocap skeleton
@@ -68,7 +80,7 @@ class RigidBody
 
     int ID;
     
-    geometry_msgs::Pose pose; 
+    Pose pose; 
 
     int NumberOfMarkers;
     Marker *marker;
