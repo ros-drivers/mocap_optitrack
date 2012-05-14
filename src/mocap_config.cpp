@@ -37,18 +37,20 @@ void PublishedRigidBody::publish(RigidBody &body)
   const geometry_msgs::Pose pose = body.get_ros_pose();
   
   if (publish_pose)
+  {
     pose_pub.publish(pose);
+  }
 
   if (!publish_pose2d && !publish_tf)
+  {
+    // nothing to do, bail early
     return;
+  }
 
   tf::Quaternion q(pose.orientation.x,
                    pose.orientation.y,
                    pose.orientation.z,
                    pose.orientation.w);
-
-  double roll, pitch, yaw;
-  btMatrix3x3(q).getEulerYPR(yaw, pitch, roll);
 
   // publish 2D pose
   if (publish_pose2d)
@@ -56,7 +58,7 @@ void PublishedRigidBody::publish(RigidBody &body)
     geometry_msgs::Pose2D pose2d;
     pose2d.x = pose.position.x;
     pose2d.y = pose.position.y;
-    pose2d.theta = yaw;
+    pose2d.theta = tf::getYaw(q);
     pose2d_pub.publish(pose2d);
   }
 
@@ -72,7 +74,7 @@ void PublishedRigidBody::publish(RigidBody &body)
     // Handle different coordinate systems (Arena vs. rviz)
     transform.setRotation(q.inverse());
     ros::Time timestamp(ros::Time::now());
-    tf_pub.sendTransform(tf::StampedTransform(transform, timestamp, "base_link", (tf_topic)));
+    tf_pub.sendTransform(tf::StampedTransform(transform, timestamp, "base_link", tf_topic));
   }
 }
 
