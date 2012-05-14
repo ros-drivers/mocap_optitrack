@@ -34,16 +34,18 @@ PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node)
 
 void PublishedRigidBody::publish(RigidBody &body)
 {
+  const geometry_msgs::Pose pose = body.get_ros_pose();
+  
   if (publish_pose)
-    pose_pub.publish(body.pose);
+    pose_pub.publish(pose);
 
   if (!publish_pose2d && !publish_tf)
     return;
 
-  tf::Quaternion q(body.pose.orientation.x,
-                   body.pose.orientation.z,
-                   body.pose.orientation.y,
-                   body.pose.orientation.w);
+  tf::Quaternion q(pose.orientation.x,
+                   pose.orientation.y,
+                   pose.orientation.z,
+                   pose.orientation.w);
 
   double roll, pitch, yaw;
   btMatrix3x3(q).getEulerYPR(yaw, pitch, roll);
@@ -51,11 +53,11 @@ void PublishedRigidBody::publish(RigidBody &body)
   // publish 2D pose
   if (publish_pose2d)
   {
-    geometry_msgs::Pose2D pose;
-    pose.x = body.pose.position.x;
-    pose.y = body.pose.position.z;
-    pose.theta = yaw;
-    pose2d_pub.publish(pose);
+    geometry_msgs::Pose2D pose2d;
+    pose2d.x = pose.position.x;
+    pose2d.y = pose.position.y;
+    pose2d.theta = yaw;
+    pose2d_pub.publish(pose2d);
   }
 
   if (publish_tf)
@@ -63,14 +65,14 @@ void PublishedRigidBody::publish(RigidBody &body)
     // publish transform
     tf::Transform transform;
     // Translate mocap data from mm --> m to be compatible with rviz
-    transform.setOrigin( tf::Vector3(body.pose.position.x / 1000.0f,
-                                     body.pose.position.y / 1000.0f,
-                                     body.pose.position.z / 1000.0f));
+    transform.setOrigin( tf::Vector3(pose.position.x / 1000.0f,
+                                     pose.position.y / 1000.0f,
+                                     pose.position.z / 1000.0f));
 
     // Handle different coordinate systems (Arena vs. rviz)
     transform.setRotation(q.inverse());
     ros::Time timestamp(ros::Time::now());
-    tf_pub.sendTransform(tf::StampedTransform(transform, timestamp, "base_link", std::string(tf_topic)));
+    tf_pub.sendTransform(tf::StampedTransform(transform, timestamp, "base_link", (tf_topic)));
   }
 }
 

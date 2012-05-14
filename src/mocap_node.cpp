@@ -29,10 +29,8 @@
 const std::string MULTICAST_IP = "224.0.0.1";
 
 const std::string MOCAP_MODEL_KEY = "mocap_model";
+const std::string RIGID_BODIES_KEY = "rigid_bodies";
 const char ** DEFAULT_MOCAP_MODEL = SKELETON_WITHOUT_TOES;
-bool publish_transform = true;
-bool publish_pose = true;
-bool publish_ground_pose = true;
 
 const int LOCAL_PORT = 1511;
 
@@ -72,7 +70,7 @@ void processMocapData( const char** mocap_model, RigidBodyMap& published_rigid_b
             packetread = true;
             numberOfPackets++;
 
-            if( format.numModels > 0 )
+            if( format.model.numRigidBodies > 0 )
             {
               for( int i = 0; i < format.model.numRigidBodies; i++ )
               {
@@ -127,7 +125,7 @@ int main( int argc, char* argv[] )
 
   RigidBodyMap published_rigid_bodies;
 
-  if (n.hasParam("rigid_bodies"))
+  if (n.hasParam(RIGID_BODIES_KEY))
   {
       XmlRpc::XmlRpcValue body_list;
       n.getParam("rigid_bodies", body_list);
@@ -149,10 +147,6 @@ int main( int argc, char* argv[] )
           }
       }
   }
-
-  n.getParam(PUBLISH_TRANSFORM_KEY, publish_transform);
-  n.getParam(PUBLISH_POSE_KEY, publish_pose);
-  n.getParam(PUBLISH_GROUND_POSE_KEY, publish_ground_pose);
 
   // Process mocap data until SIGINT
   processMocapData( mocap_model, published_rigid_bodies);

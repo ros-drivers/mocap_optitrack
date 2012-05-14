@@ -6,7 +6,7 @@
 using namespace std;
 
 RigidBody::RigidBody() 
-  : pose(), marker(0)
+  : NumberOfMarkers(0), marker(0)
 {
 }
 
@@ -15,8 +15,25 @@ RigidBody::~RigidBody()
   delete[] marker;
 }
 
+const geometry_msgs::Pose RigidBody::get_ros_pose()
+{
+  geometry_msgs::Pose ros_pose;
+
+  // y & z axes are swapped in the Optitrack coordinate system
+  ros_pose.position.x = pose.position.x;
+  ros_pose.position.y = pose.position.z;
+  ros_pose.position.z = pose.position.y;
+
+  ros_pose.orientation.x = pose.orientation.x;
+  ros_pose.orientation.y = pose.orientation.z;
+  ros_pose.orientation.z = pose.orientation.y;
+  ros_pose.orientation.w = pose.orientation.w;
+
+  return ros_pose;
+}
+
 ModelDescription::ModelDescription()
-  : markerNames(0)
+  : numMarkers(0), markerNames(0)
 {
 }
 
@@ -26,7 +43,9 @@ ModelDescription::~ModelDescription()
 }
 
 ModelFrame::ModelFrame()
-  : markerSets(0), otherMarkers(0), rigidBodies(0)
+  : markerSets(0), otherMarkers(0), rigidBodies(0), 
+    numMarkerSets(0), numOtherMarkers(0), numRigidBodies(0),
+    latency(0.0)
 {
 }
 
@@ -38,7 +57,7 @@ ModelFrame::~ModelFrame()
 }
 
 MoCapDataFormat::MoCapDataFormat(const char *packet, unsigned short length) 
-  : packet(packet), length(length)
+  : packet(packet), length(length), frameNumber(0)
 {
 }
 
@@ -102,21 +121,7 @@ void MoCapDataFormat::parse()
   {
     // read id, position and orientation of each rigid body
     read_and_seek(model.rigidBodies[m].ID);
-    float temp_data = 0;
-    read_and_seek(temp_data); 
-    model.rigidBodies[m].pose.position.x = temp_data;
-    read_and_seek(temp_data); 
-    model.rigidBodies[m].pose.position.y = temp_data;
-    read_and_seek(temp_data); 
-    model.rigidBodies[m].pose.position.z = temp_data;
-    read_and_seek(temp_data); 
-    model.rigidBodies[m].pose.orientation.x = temp_data;
-    read_and_seek(temp_data); 
-    model.rigidBodies[m].pose.orientation.y = temp_data;
-    read_and_seek(temp_data); 
-    model.rigidBodies[m].pose.orientation.z = temp_data;
-    read_and_seek(temp_data); 
-    model.rigidBodies[m].pose.orientation.w = temp_data;
+    read_and_seek(model.rigidBodies[m].pose);
 
     // get number of markers per rigid body
     read_and_seek(model.rigidBodies[m].NumberOfMarkers);

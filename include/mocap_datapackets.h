@@ -43,6 +43,7 @@
 #include <sys/types.h>
 #include <iostream>
 #include <string>
+#include <geometry_msgs/Pose.h>
 
 using namespace std;
 
@@ -63,7 +64,7 @@ class Pose
       float y;
       float z;
     } position;
-    typedef struct {
+    struct {
       float x;
       float y;
       float z;
@@ -84,6 +85,8 @@ class RigidBody
 
     int NumberOfMarkers;
     Marker *marker;
+
+    const geometry_msgs::Pose get_ros_pose();
 };
 
 /// \brief Data object describing a single tracked model
@@ -101,7 +104,7 @@ class ModelDescription
 class MarkerSet
 {
   public:
-    MarkerSet() : markers(0) {}
+    MarkerSet() : numMarkers(0), markers(0) {}
     ~MarkerSet() { delete[] markers; }
     char name[256];
     int numMarkers;
@@ -115,28 +118,15 @@ class ModelFrame
     ModelFrame();
     ~ModelFrame();
 
-    int numMarkerSets;
     MarkerSet *markerSets;
-    int numOtherMarkers;
     Marker *otherMarkers;
-    int numRigidBodies;
     RigidBody *rigidBodies;
 
+    int numMarkerSets;
+    int numOtherMarkers;
+    int numRigidBodies;
+
     float latency;
-};
-
-/// \brief Parser for a NatNet "Dataset Descriptions Packet"
-class MoCapDataDescription
-{
-  public:
-    MoCapDataDescription();
-    ~MoCapDataDescription();
-
-    /// \brief Parses a NatNet "Dataset Descriptions Packet" as it is streamed by the Arena software according to the descriptions in the NatNet SDK v1.4
-    void parse(const char *packet, ushort payload);
-
-    int numDatasets;
-    ModelDescription *model;
 };
 
 /// \brief Parser for a NatNet data frame packet
@@ -154,7 +144,6 @@ class MoCapDataFormat
     unsigned short length;
 
     int frameNumber;
-    int numModels;
     ModelFrame model;
 
   private:
