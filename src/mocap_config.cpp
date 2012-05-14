@@ -1,4 +1,48 @@
-
+/*
+ *      _____
+ *     /  _  \
+ *    / _/ \  \
+ *   / / \_/   \
+ *  /  \_/  _   \  ___  _    ___   ___   ____   ____   ___   _____  _   _
+ *  \  / \_/ \  / /  _\| |  | __| / _ \ | ++ \ | ++ \ / _ \ |_   _|| | | |
+ *   \ \_/ \_/ /  | |  | |  | ++ | |_| || ++ / | ++_/| |_| |  | |  | +-+ |
+ *    \  \_/  /   | |_ | |_ | ++ |  _  || |\ \ | |   |  _  |  | |  | +-+ |
+ *     \_____/    \___/|___||___||_| |_||_| \_\|_|   |_| |_|  |_|  |_| |_|
+ *             ROBOTICS™ 
+ *
+ *  File: mocap_config.cpp
+ *  Desc: Classes representing ROS configuration for mocap_optitrack node. Data
+ *  will be published to differed topics based on the configuration provided.
+ *  Auth: Alex Bencz
+ *
+ *  Copyright (c) 2012, Clearpath Robotics, Inc. 
+ *  All Rights Reserved
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Clearpath Robotics, Inc. nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL CLEARPATH ROBOTICS, INC. BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * Please send comments, questions, or patches to skynet@clearpathrobotics.com 
+ *
+ */
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Pose2D.h>
 #include <tf/transform_datatypes.h>
@@ -10,6 +54,7 @@ const std::string TF_TOPIC_PARAM_NAME = "tf";
 
 PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node)
 {
+  // load configuration for this rigid body from ROS
   publish_pose = validateParam(config_node, POSE_TOPIC_PARAM_NAME);
   publish_pose2d = validateParam(config_node, POSE2D_TOPIC_PARAM_NAME);
   publish_tf = validateParam(config_node, TF_TOPIC_PARAM_NAME);
@@ -34,6 +79,7 @@ PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node)
 
 void PublishedRigidBody::publish(RigidBody &body)
 {
+  // don't do anything if no new data was provided
   if (!body.has_data())
   {
     return;
@@ -71,7 +117,6 @@ void PublishedRigidBody::publish(RigidBody &body)
   {
     // publish transform
     tf::Transform transform;
-    // Translate mocap data from mm --> m to be compatible with rviz
     transform.setOrigin( tf::Vector3(pose.position.x,
                                      pose.position.y,
                                      pose.position.z));
