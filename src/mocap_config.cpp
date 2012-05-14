@@ -72,9 +72,9 @@ void PublishedRigidBody::publish(RigidBody &body)
     // publish transform
     tf::Transform transform;
     // Translate mocap data from mm --> m to be compatible with rviz
-    transform.setOrigin( tf::Vector3(pose.position.x / 1000.0f,
-                                     pose.position.y / 1000.0f,
-                                     pose.position.z / 1000.0f));
+    transform.setOrigin( tf::Vector3(pose.position.x,
+                                     pose.position.y,
+                                     pose.position.z));
 
     // Handle different coordinate systems (Arena vs. rviz)
     transform.setRotation(q.inverse());
