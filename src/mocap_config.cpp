@@ -34,6 +34,11 @@ PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node)
 
 void PublishedRigidBody::publish(RigidBody &body)
 {
+  if (!body.has_data())
+  {
+    return;
+  }
+
   const geometry_msgs::Pose pose = body.get_ros_pose();
   
   if (publish_pose)

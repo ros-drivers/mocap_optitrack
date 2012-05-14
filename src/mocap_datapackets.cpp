@@ -32,6 +32,12 @@ const geometry_msgs::Pose RigidBody::get_ros_pose()
   return ros_pose;
 }
 
+bool RigidBody::has_data()
+{
+    static const char zero[sizeof(pose)] = { 0 };
+    return memcmp(zero, (char*) &pose, sizeof(pose));
+}
+
 ModelDescription::ModelDescription()
   : numMarkers(0), markerNames(0)
 {

@@ -87,6 +87,7 @@ class RigidBody
     Marker *marker;
 
     const geometry_msgs::Pose get_ros_pose();
+    bool has_data();
 };
 
 /// \brief Data object describing a single tracked model
