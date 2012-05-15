@@ -41,58 +41,54 @@ void processMocapData( const char** mocap_model, RigidBodyMap& published_rigid_b
   UdpMulticastSocket multicast_client_socket( LOCAL_PORT, MULTICAST_IP );
 
   ushort payload;
-  while( true )
+  int numberOfPackets = 0;
+  while(ros::ok())
   {
-    int numberOfPackets = 0;
     bool packetread = false;
+    int numBytes = 0;
 
-    while( !packetread )
+    do
     {
-      int numBytes = 0;
+      // Receive data from mocap device
+      numBytes = multicast_client_socket.recv();
 
-      do
+      // Parse mocap data
+      if( numBytes > 0 )
       {
-        // Receive data from mocap device
-        numBytes = multicast_client_socket.recv();
+        const char* buffer = multicast_client_socket.getBuffer();
+        unsigned short header = *((unsigned short*)(&buffer[0]));
 
-        // Parse mocap data
-        if( numBytes > 0 )
+        // Look for the beginning of a NatNet package
+        if (header == 7)
         {
-          const char* buffer = multicast_client_socket.getBuffer();
-          unsigned short header = *((unsigned short*)(&buffer[0]));
+          payload = *((ushort*) &buffer[2]);
+          MoCapDataFormat format(buffer, payload);
+          format.parse();
+          packetread = true;
+          numberOfPackets++;
 
-          // Look for the beginning of a NatNet package
-          if (header == 7)
+          if( format.model.numRigidBodies > 0 )
           {
-            payload = *((ushort*) &buffer[2]);
-            MoCapDataFormat format(buffer, payload);
-            format.parse();
-            packetread = true;
-            numberOfPackets++;
-
-            if( format.model.numRigidBodies > 0 )
+            for( int i = 0; i < format.model.numRigidBodies; i++ )
             {
-              for( int i = 0; i < format.model.numRigidBodies; i++ )
-              {
-                int ID = format.model.rigidBodies[i].ID;
-                RigidBodyMap::iterator item = published_rigid_bodies.find(ID);
+              int ID = format.model.rigidBodies[i].ID;
+              RigidBodyMap::iterator item = published_rigid_bodies.find(ID);
 
-                if (item != published_rigid_bodies.end())
-                {
-                    item->second.publish(format.model.rigidBodies[i]);
-                }
+              if (item != published_rigid_bodies.end())
+              {
+                  item->second.publish(format.model.rigidBodies[i]);
               }
             }
           }
-          // else skip packet
         }
-      } while( numBytes > 0 );
-
-      // Don't try again immediately
-      if( !packetread )
-      {
-        usleep( 10 );
+        // else skip packet
       }
+    } while( numBytes > 0 );
+
+    // Don't try again immediately
+    if( !packetread )
+    {
+      usleep( 10 );
     }
   }
 }
@@ -105,7 +101,7 @@ int main( int argc, char* argv[] )
 { 
   
   // Initialize ROS node
-  ros::init(argc, argv, "mocap_node", ros::init_options::NoSigintHandler );
+  ros::init(argc, argv, "mocap_node");
   ros::NodeHandle n("~");
 
   // Get configuration from ROS parameter server  
@@ -149,7 +145,7 @@ int main( int argc, char* argv[] )
   }
 
   // Process mocap data until SIGINT
-  processMocapData( mocap_model, published_rigid_bodies);
+  processMocapData(mocap_model, published_rigid_bodies);
 
   return 0;
 }
