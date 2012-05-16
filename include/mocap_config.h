@@ -58,7 +58,7 @@ class PublishedRigidBody
 
   std::string pose_topic;
   std::string pose2d_topic;
-  std::string tf_topic;
+  std::string frame_id;
 
   bool publish_pose;
   bool publish_tf;

@@ -1,11 +1,16 @@
-
+# 
+# Definition of all trackable objects
+# Identifier corresponds to Trackable ID set in Tracking Tools
+#
+#
 mocap_model: 'SKELETON_WITHOUT_TOES'
 
 rigid_bodies:
     '1':
-        pose: mocap_node/pose
-        pose2d: mocap_node/ground_pose
-        tf: mocap_node/tf
+        pose: Husky_1/pose             # mocap_node/pose
+        pose2d: Husky_1/ground_pose    # mocap_node/ground_pose
+        frame_id: Husky_1/base_link
     '2':
-        pose: mocap_node/pose2
-        pose2d: mocap_node/ground_pose2
+        pose: Husky_2/pose
+        pose2d: Husky_2/ground_pose
+        frame_id: Husky_2/base_footprint
