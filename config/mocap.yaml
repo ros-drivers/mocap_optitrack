@@ -5,7 +5,8 @@ rigid_bodies:
     '1':
         pose: mocap_node/pose
         pose2d: mocap_node/ground_pose
-        tf: mocap_node/tf
+        frame_id: robot_1_frame
     '2':
         pose: mocap_node/pose2
         pose2d: mocap_node/ground_pose2
+

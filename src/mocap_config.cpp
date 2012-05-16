@@ -50,14 +50,15 @@
 
 const std::string POSE_TOPIC_PARAM_NAME = "pose";
 const std::string POSE2D_TOPIC_PARAM_NAME = "pose2d";
-const std::string TF_TOPIC_PARAM_NAME = "tf";
+const std::string FRAME_ID_PARAM_NAME = "frame_id";
 
 PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node)
 {
   // load configuration for this rigid body from ROS
   publish_pose = validateParam(config_node, POSE_TOPIC_PARAM_NAME);
   publish_pose2d = validateParam(config_node, POSE2D_TOPIC_PARAM_NAME);
-  publish_tf = validateParam(config_node, TF_TOPIC_PARAM_NAME);
+  // only publish tf if a frame ID is provided
+  publish_tf = validateParam(config_node, FRAME_ID_PARAM_NAME);
 
   if (publish_pose)
   {
@@ -73,7 +74,7 @@ PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node)
 
   if (publish_tf)
   {
-    tf_topic = (std::string&) config_node[TF_TOPIC_PARAM_NAME];
+    frame_id = (std::string&) config_node[FRAME_ID_PARAM_NAME];
   }
 }
 
@@ -124,7 +125,7 @@ void PublishedRigidBody::publish(RigidBody &body)
     // Handle different coordinate systems (Arena vs. rviz)
     transform.setRotation(q.inverse());
     ros::Time timestamp(ros::Time::now());
-    tf_pub.sendTransform(tf::StampedTransform(transform, timestamp, "base_link", tf_topic));
+    tf_pub.sendTransform(tf::StampedTransform(transform, timestamp, "base_link", frame_id));
   }
 }
 
