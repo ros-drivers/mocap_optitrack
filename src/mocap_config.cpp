@@ -123,7 +123,7 @@ void PublishedRigidBody::publish(RigidBody &body)
                                      pose.position.z));
 
     // Handle different coordinate systems (Arena vs. rviz)
-    transform.setRotation(q.inverse());
+    transform.setRotation(q);
     ros::Time timestamp(ros::Time::now());
     tf_pub.sendTransform(tf::StampedTransform(transform, timestamp, "base_link", frame_id));
   }
