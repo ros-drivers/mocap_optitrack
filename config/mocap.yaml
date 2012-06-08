@@ -3,10 +3,10 @@ mocap_model: 'SKELETON_WITHOUT_TOES'
 
 rigid_bodies:
     '1':
-        pose: mocap_node/pose
-        pose2d: mocap_node/ground_pose
-        frame_id: robot_1_frame
+        pose: Pelican_1/pose             # mocap_node/pose
+        pose2d: Pelican_1/ground_pose    # mocap_node/ground_pose
+        frame_id: Pelican_1/base_link
     '2':
-        pose: mocap_node/pose2
-        pose2d: mocap_node/ground_pose2
-
+        pose: Turtlebot_07/pose
+        pose2d: Turtlebot_07/ground_pose
+        frame_id: Turtlebot_07/base_footprint
