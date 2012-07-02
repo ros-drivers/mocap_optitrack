@@ -85,6 +85,11 @@ void PublishedRigidBody::publish(RigidBody &body)
   {
     return;
   }
+  // NaN?
+  if (body.pose.position.x != body.pose.position.x)
+  {
+    return;
+  }
 
   const geometry_msgs::Pose pose = body.get_ros_pose();
   
