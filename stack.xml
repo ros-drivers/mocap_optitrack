@@ -1,0 +1,10 @@
+<stack>
+  <description brief="mocap_optitrack">mocap_optitrack</description>
+  <author>Andreas Hochrath and Torsten Fiolka</author>
+  <license>BSD, GPL</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/mocap_optitrack</url>
+
+  <depend stack="ros" />
+
+</stack>

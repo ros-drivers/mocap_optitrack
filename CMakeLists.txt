@@ -25,3 +25,4 @@ SET( MOCAP_SRCS
 )
 
 rosbuild_add_executable( mocap_node ${MOCAP_SRCS} ) 
+rosbuild_make_distribution(0.1.0)

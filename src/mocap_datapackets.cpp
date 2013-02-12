@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string>
 #include <iostream>
+#include <ros/console.h>
 using namespace std;
 
 RigidBody::RigidBody() 
