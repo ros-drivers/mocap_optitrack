@@ -11,11 +11,12 @@
     Currently, this node supports the NatNet streaming protocol v2.2
     </p>
     <p>
-    Copyright (c) 2010, University of Bonn, Computer Science Institute VI<br />
+    Copyright (c) 2013, Clearpath Robotics<br/> 
+    Copyright (c) 2010, University of Bonn, Computer Science Institute VI<br/>
     All rights reserved.
     </p>
   </description>
-  <author>Kathrin Gräve/graeve@ais.uni-bonn.de</author>
+  <author>Kathrin Gräve/graeve@ais.uni-bonn.de, Alex Bencz/abencz@clearpathrobotics.com</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/mocap_optitrack</url>
