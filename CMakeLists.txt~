@@ -54,7 +54,7 @@ include_directories(include
 
 
 ## Declare a cpp executable
-add_executable(mocap_node src/mocap_node.cpp src/mocap_config.cpp   src/mocap_datapackets.cpp   src/Socket.cpp)
+add_executable(mocap_node src/mocap_node.cpp src/mocap_config.cpp   src/mocap_datapackets.cpp)
 
 
 ## Add cmake target dependencies of the executable/library
