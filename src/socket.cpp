@@ -7,14 +7,13 @@
 
 // Implementation of the Socket class.
 
-#include "Socket.h"
+#include "mocap_optitrack/socket.h"
 #include <cstring>
 #include <cerrno>
 #include <fcntl.h>
 #include <iostream>
 #include <stdio.h>
 #include <sstream>
-#include <SocketException.h>
 
 #include <ros/ros.h>
 

@@ -37,13 +37,19 @@
 
 /// \author <a href="mailto:graeve@ais.uni-bonn.de">Kathrin Gräve</a>
 
-#ifndef SocketException_class
-#define SocketException_class
+#ifndef __SOCKET_CLASS_H__
+#define __SOCKET_CLASS_H__
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <unistd.h>
 #include <string>
+#include <arpa/inet.h>
 #include <stdexcept>
 
-/// \brief Exception class thrown by socket classes in this package
+/// \brief Exception class thrown by socket classes in this file.
 class SocketException : public std::runtime_error
 {
   public:
@@ -55,5 +61,37 @@ class SocketException : public std::runtime_error
     ~SocketException () throw() {}
 };
 
-#endif
+/// \brief Allows to retrieve data from a UDP multicast group
+class UdpMulticastSocket
+{
+  public:
+    
+    /// \brief Maximum number of bytse that can is read at a time
+    static const int MAXRECV = 3000;
 
+    /// Creates a socket and joins the multicast group with the given address
+    UdpMulticastSocket( const int local_port, const std::string multicast_ip = "224.0.0.1" );
+    
+    ///
+    ~UdpMulticastSocket();
+    
+    /// \brief Retrieve data from multicast group.
+    /// \return The number of bytes received or -1 if no data is available
+    ///
+    /// This call is non-blocking.
+    int recv();
+
+    /// \brief Returns a pointer to the internal buffer, holding the received data.
+    ///
+    /// The buffer size may be obtained from MAXRECV.
+    const char* getBuffer() { return &buf[0]; }
+
+  private:
+
+    int m_socket;
+    sockaddr_in m_local_addr;
+
+    char buf [ MAXRECV + 1 ];
+};
+
+#endif/*__SOCKET_CLASS_H__*/

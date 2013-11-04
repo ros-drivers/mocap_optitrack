@@ -46,7 +46,7 @@
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Pose2D.h>
 #include <tf/transform_datatypes.h>
-#include "mocap_config.h"
+#include "mocap_optitrack/mocap_config.h"
 
 const std::string POSE_TOPIC_PARAM_NAME = "pose";
 const std::string POSE2D_TOPIC_PARAM_NAME = "pose2d";

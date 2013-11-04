@@ -7,10 +7,10 @@
 /// Currently, this node supports the NatNet streaming protocol v1.4.
 
 // Local includes
-#include "Socket.h"
-#include "mocap_datapackets.h"
-#include "mocap_config.h"
-#include "skeletons.h"
+#include "mocap_optitrack/socket.h"
+#include "mocap_optitrack/mocap_datapackets.h"
+#include "mocap_optitrack/mocap_config.h"
+#include "mocap_optitrack/skeletons.h"
 
 // ROS includes
 #include <ros/ros.h>
