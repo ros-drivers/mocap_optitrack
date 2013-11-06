@@ -1,17 +1,37 @@
 <?xml version="1.0"?>
 <package>
+
   <name>mocap_optitrack</name>
   <version>0.0.0</version>
-  <description>mocap_optitrack</description>
-  <license>BSD, GPL</license>
+  <description>
+    Streaming of OptiTrack mocap data to tf
+    <p>
+    This package contains a node that translates motion capture data from an
+    OptiTrack rig to tf transforms, poses and 2D poses. The node receives
+    packets that are streamed by the Tracking Tools software, decodes them and
+    broadcasts the poses of configured rigid bodies as tf transforms, poses,
+    and/or 2D poses.
+    </p>
+    <p>
+    Currently, this node supports the NatNet streaming protocol v2.2
+    </p>
+    <p>
+    Copyright (c) 2013, Clearpath Robotics<br/> 
+    Copyright (c) 2010, University of Bonn, Computer Science Institute VI<br/>
+    All rights reserved.
+    </p>
+  </description>
+  <author>Kathrin Gräve/graeve@ais.uni-bonn.de, Alex Bencz/abencz@clearpathrobotics.com</author>
+  <license>BSD</license>
   <url type="website">http://ros.org/wiki/mocap_optitrack</url>
-  <author>Andreas Hochrath and Torsten Fiolka</author>
-  <maintainer email="todo@todo.todo">todo</maintainer>
+  <maintainer email="abencz@clearpathrobotics.com">Alex Bencz</maintainer>
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>std_msgs</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>geometry_msgs</build_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>
-  <build_depend>tf</build_depend>
+  <run_depend>tf</run_depend>
 </package>
