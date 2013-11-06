@@ -5,6 +5,6 @@
 	respawn="false"
 	launch-prefix=""
 	required="true">
-	<rosparam file="$(find mocap_optitrack)/config/mocap.yaml" command="load" />
+    <rosparam file="$(find mocap_optitrack)/config/mocap.yaml" command="load" />
   </node>
 </launch>
