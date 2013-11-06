@@ -1,4 +1,4 @@
-#include "mocap_datapackets.h"
+#include "mocap_optitrack/mocap_datapackets.h"
 
 #include <stdio.h>
 #include <string>
