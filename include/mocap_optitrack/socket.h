@@ -66,7 +66,7 @@ class UdpMulticastSocket
 {
   public:
     
-    /// \brief Maximum number of bytse that can is read at a time
+    /// \brief Maximum number of bytse that can be read at a time
     static const int MAXRECV = 3000;
 
     /// Creates a socket and joins the multicast group with the given address
