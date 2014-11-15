@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<VisualGDBProjectSettings2 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <ConfigurationName>Release</ConfigurationName>
+  <Project xsi:type="com.visualgdb.project.windows">
+    <CustomSourceDirectories>
+      <Directories />
+      <PathStyle>MinGWUnixSlash</PathStyle>
+    </CustomSourceDirectories>
+    <MainSourceDirectory>$(ProjectDir)</MainSourceDirectory>
+  </Project>
+  <Build xsi:type="com.visualgdb.build.make">
+    <MakeFilePathRelativeToSourceDir>Makefile</MakeFilePathRelativeToSourceDir>
+    <MakeConfigurationName>Release</MakeConfigurationName>
+    <Toolchain>
+      <Name>MinGW32</Name>
+      <Location>C:\SysGCC\MinGW32</Location>
+      <UnixSystem>false</UnixSystem>
+      <GCC>C:\SysGCC\MinGW32\bin\gcc.exe</GCC>
+      <GXX>C:\SysGCC\MinGW32\bin\g++.exe</GXX>
+      <GDB>C:\SysGCC\MinGW32\bin\gdb.exe</GDB>
+      <AR>C:\SysGCC\MinGW32\bin\ar.exe</AR>
+      <OBJCOPY>C:\SysGCC\MinGW32\bin\objcopy.exe</OBJCOPY>
+      <Make>C:\SysGCC\MinGW32\bin\mingw32-make.exe</Make>
+      <AdditionalPathDirectories>
+        <string>C:\SysGCC\MinGW32\bin</string>
+      </AdditionalPathDirectories>
+      <RequireCmdExe>true</RequireCmdExe>
+      <RequireCtrlBreak>false</RequireCtrlBreak>
+      <SourceDirMapping>
+        <Directories />
+        <PathStyle>MinGWUnixSlash</PathStyle>
+      </SourceDirMapping>
+    </Toolchain>
+    <MakeCommandTemplate>
+      <SkipWhenRunningCommandList>false</SkipWhenRunningCommandList>
+      <Command>cmd.exe</Command>
+      <Arguments>/c "C:\SysGCC\MinGW32\bin\mingw32-make.exe"</Arguments>
+      <WorkingDirectory>$(BuildDir)</WorkingDirectory>
+      <Environment>
+        <Records>
+          <Record>
+            <VariableName>LANG</VariableName>
+            <Value>en_US.UTF-8</Value>
+          </Record>
+          <Record>
+            <VariableName>PATH</VariableName>
+            <Value>%PATH%;C:\SysGCC\MinGW32\bin</Value>
+          </Record>
+        </Records>
+      </Environment>
+    </MakeCommandTemplate>
+  </Build>
+  <Debug xsi:type="com.visualgdb.debug.local">
+    <AdditionalStartupCommands />
+    <LaunchGDBSettings xsi:type="GDBLaunchParametersNewInstance">
+      <GDBEnvironment>
+        <Records>
+          <Record>
+            <VariableName>LANG</VariableName>
+            <Value>en_US.UTF-8</Value>
+          </Record>
+          <Record>
+            <VariableName>PATH</VariableName>
+            <Value>%PATH%;C:\SysGCC\MinGW32\bin</Value>
+          </Record>
+        </Records>
+      </GDBEnvironment>
+      <DebuggedProgram>$(TargetPath)</DebuggedProgram>
+      <GDBServerPort>2000</GDBServerPort>
+      <ProgramArguments />
+    </LaunchGDBSettings>
+    <GenerateCtrlBreakInsteadOfCtrlC>false</GenerateCtrlBreakInsteadOfCtrlC>
+  </Debug>
+  <CustomBuild>
+    <PreBuildActions />
+    <PostBuildActions />
+    <PreCleanActions />
+    <PostCleanActions />
+  </CustomBuild>
+  <CustomDebug>
+    <PreDebugActions />
+    <PostDebugActions />
+    <BreakMode>Default</BreakMode>
+  </CustomDebug>
+  <CustomShortcuts>
+    <Shortcuts />
+    <ShowMessageAfterExecuting>true</ShowMessageAfterExecuting>
+  </CustomShortcuts>
+  <UserDefinedVariables />
+</VisualGDBProjectSettings2>
