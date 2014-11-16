@@ -19,6 +19,8 @@
 
 UdpMulticastSocket::UdpMulticastSocket( const int local_port, const std::string multicast_ip ) 
 {
+  remote_ip_exist = false;
+
   // Create a UDP socket
   ROS_INFO( "Creating socket..." );
   m_socket = socket( AF_INET, SOCK_DGRAM, 0 );
@@ -143,7 +145,17 @@ int UdpMulticastSocket::recv()
   if( status > 0 )
     ROS_DEBUG( "%4i bytes received from %s:%i", status, inet_ntoa( remote_addr.sin_addr ), ntohs( remote_addr.sin_port ) );
   else if( status == 0 )
-    ROS_INFO( "Connection closed by peer" );
+    ROS_DEBUG( "Connection closed by peer" );
+
+  HostAddr.sin_addr =remote_addr.sin_addr;
+  remote_ip_exist = true;
 
   return status;
+}
+
+int UdpMulticastSocket::send(const char* buf, unsigned int sz, int port)
+{
+  HostAddr.sin_family = AF_INET;
+  HostAddr.sin_port = htons(port);
+  return sendto(m_socket, buf, sz, 0, (sockaddr*)&HostAddr, sizeof(HostAddr));
 }
