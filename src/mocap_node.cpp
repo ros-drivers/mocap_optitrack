@@ -21,18 +21,57 @@
 // System includes
 #include <string>
 #include <unistd.h>
-
 ////////////////////////////////////////////////////////////////////////
 // Constants
 
 // ip on multicast group - cannot be changed in Arena
 const std::string MULTICAST_IP = "224.0.0.1";
-
 const std::string MOCAP_MODEL_KEY = "mocap_model";
 const std::string RIGID_BODIES_KEY = "rigid_bodies";
-const char ** DEFAULT_MOCAP_MODEL = SKELETON_WITHOUT_TOES;
+const char ** DEFAULT_MOCAP_MODEL = OBJECT;
+//const char ** DEFAULT_MOCAP_MODEL = SKELETON_WITHOUT_TOES;
 
+const int COMMAND_PORT = 1510;
 const int LOCAL_PORT = 1511;
+
+// NATNET message ids
+#define NAT_PING                    0 
+#define NAT_PINGRESPONSE            1
+#define NAT_REQUEST                 2
+#define NAT_RESPONSE                3
+#define NAT_REQUEST_MODELDEF        4
+#define NAT_MODELDEF                5
+#define NAT_REQUEST_FRAMEOFDATA     6
+#define NAT_FRAMEOFDATA             7
+#define NAT_MESSAGESTRING           8
+#define NAT_UNRECOGNIZED_REQUEST    100
+#define UNDEFINED                   999999.9999
+#define MAX_PACKETSIZE        100000  // max size of packet (actual packet size is dynamic)
+#define MAX_NAMELENGTH              256
+
+// sender
+typedef struct
+{
+    char szName[MAX_NAMELENGTH];            // sending app's name
+    unsigned char Version[4];               // sending app's version [major.minor.build.revision]
+    unsigned char NatNetVersion[4];         // sending app's NatNet version [major.minor.build.revision]
+
+} sSender;
+
+typedef struct
+{
+    unsigned short iMessage;                // message ID (e.g. NAT_FRAMEOFDATA)
+    unsigned short nDataBytes;              // Num bytes in payload
+    union
+    {
+        unsigned char  cData[MAX_PACKETSIZE];
+        char           szData[MAX_PACKETSIZE];
+        unsigned long  lData[MAX_PACKETSIZE/4];
+        float          fData[MAX_PACKETSIZE/4];
+        sSender        Sender;
+    } Data;                                 // Payload
+
+} sPacket;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -40,12 +79,30 @@ void processMocapData( const char** mocap_model, RigidBodyMap& published_rigid_b
 {
   UdpMulticastSocket multicast_client_socket( LOCAL_PORT, MULTICAST_IP );
 
-  ushort payload;
+  unsigned short payload_len;
   int numberOfPackets = 0;
+  int nver[4] = {0,0,0,0}; // natnet version
+  int sver[4] = {0,0,0,0}; // server version
+
+  sPacket PacketOut;
+  PacketOut.iMessage = NAT_PING;
+  PacketOut.nDataBytes = 0;
+  int nTries = 3;
+  while(nTries--) {
+  }
+
+  ROS_INFO("Start processMocapData");
+  bool version = false;
+
   while(ros::ok())
   {
     bool packetread = false;
     int numBytes = 0;
+    sPacket PacketIn;
+
+    if(!version) {
+      int iRet = multicast_client_socket.send((char*)&PacketOut, 4 + PacketOut.nDataBytes, COMMAND_PORT);
+    }
 
     do
     {
@@ -56,13 +113,16 @@ void processMocapData( const char** mocap_model, RigidBodyMap& published_rigid_b
       if( numBytes > 0 )
       {
         const char* buffer = multicast_client_socket.getBuffer();
-        unsigned short header = *((unsigned short*)(&buffer[0]));
+        memcpy((char*)&PacketIn, buffer, numBytes);
+        unsigned short header = *((unsigned short*)(&buffer[0])); // 2-bytes, ushort.
+
 
         // Look for the beginning of a NatNet package
-        if (header == 7)
+        if (header == NAT_FRAMEOFDATA && version)
         {
-          payload = *((ushort*) &buffer[2]);
-          MoCapDataFormat format(buffer, payload);
+          payload_len = *((unsigned short*) &buffer[2]);  // 2-bytes.
+          MoCapDataFormat format(buffer, payload_len);
+          format.setVersion(nver,sver);
           format.parse();
           packetread = true;
           numberOfPackets++;
@@ -80,6 +140,20 @@ void processMocapData( const char** mocap_model, RigidBodyMap& published_rigid_b
               }
             }
           }
+        }
+        
+        if (header == NAT_PINGRESPONSE) {
+          ROS_DEBUG("Header : %d, %d", header, PacketIn.iMessage);
+          ROS_DEBUG("nData : %d", PacketIn.nDataBytes);
+          
+          for(int i=0;i<4;++i) {
+            nver[i] = (int)PacketIn.Data.Sender.NatNetVersion[i];
+            sver[i] = (int)PacketIn.Data.Sender.Version[i];
+          }
+
+          ROS_INFO("NATNet Version : %d.%d.%d.%d", nver[0], nver[1], nver[2], nver[3]);
+          ROS_INFO("Server Version : %d.%d.%d.%d", sver[0], sver[1], sver[2], sver[3]);
+          version = true;
         }
         // else skip packet
       }
@@ -99,7 +173,6 @@ void processMocapData( const char** mocap_model, RigidBodyMap& published_rigid_b
 
 int main( int argc, char* argv[] )
 { 
-  
   // Initialize ROS node
   ros::init(argc, argv, "mocap_node");
   ros::NodeHandle n("~");
