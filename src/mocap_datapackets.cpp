@@ -80,39 +80,45 @@ void MoCapDataFormat::seek(size_t count)
 
 void MoCapDataFormat::parse()
 {
-  seek(4);
+  seek(4); // skip 4-bytes. Header and size.
 
   // parse frame number
   read_and_seek(frameNumber);
+  ROS_DEBUG("Frame number: %d", frameNumber);
 
   // count number of packetsets
   read_and_seek(model.numMarkerSets);
   model.markerSets = new MarkerSet[model.numMarkerSets];
-  ROS_DEBUG("Number of marker sets: %d\n", model.numMarkerSets);
+  ROS_DEBUG("Number of marker sets: %d", model.numMarkerSets);
 
   for (int i = 0; i < model.numMarkerSets; i++)
   {
     strcpy(model.markerSets[i].name, packet);
     seek(strlen(model.markerSets[i].name) + 1);
 
-    ROS_DEBUG("Parsing marker set named: %s\n", model.markerSets[i].name);
+    ROS_DEBUG("Parsing marker set named: %s", model.markerSets[i].name);
 
     // read number of markers that belong to the model
     read_and_seek(model.markerSets[i].numMarkers);
-    ROS_DEBUG("Number of markers in set: %d\n", model.markerSets[i].numMarkers);
-
+    ROS_DEBUG("Number of markers in set: %d", model.markerSets[i].numMarkers);
     model.markerSets[i].markers = new Marker[model.markerSets[i].numMarkers];
+
     for (int k = 0; k < model.markerSets[i].numMarkers; k++)
     {
       // read marker positions
       read_and_seek(model.markerSets[i].markers[k]);
+      float x = model.markerSets[i].markers[k].positionX;
+      float y = model.markerSets[i].markers[k].positionY;
+      float z = model.markerSets[i].markers[k].positionZ;
+      ROS_DEBUG("\t marker %d: [x=%3.2f,y=%3.2f,z=%3.2f]", k, x, y, z);
     }
   }
 
-  // read number of 'other' markers (cf. NatNet specs)
+  // read number of 'other' markers. Unidentified markers. (cf. NatNet specs)
   read_and_seek(model.numOtherMarkers);
   model.otherMarkers = new Marker[model.numOtherMarkers];
-  ROS_DEBUG("Number of markers not in sets: %d\n", model.numOtherMarkers);
+  ROS_DEBUG("Number of markers not in sets: %d", model.numOtherMarkers);
+
   for (int l = 0; l < model.numOtherMarkers; l++)
   {
     // read positions of 'other' markers
@@ -121,7 +127,7 @@ void MoCapDataFormat::parse()
 
   // read number of rigid bodies of the model
   read_and_seek(model.numRigidBodies);
-  ROS_DEBUG("Number of rigid bodies: %d\n", model.numRigidBodies);
+  ROS_DEBUG("Number of rigid bodies: %d", model.numRigidBodies);
 
   model.rigidBodies = new RigidBody[model.numRigidBodies];
   for (int m = 0; m < model.numRigidBodies; m++)
@@ -132,11 +138,22 @@ void MoCapDataFormat::parse()
 
     // get number of markers per rigid body
     read_and_seek(model.rigidBodies[m].NumberOfMarkers);
-    ROS_DEBUG("Rigid body ID: %d\n", model.rigidBodies[m].ID);
-    ROS_DEBUG("Number of rigid body markers: %d\n", model.rigidBodies[m].NumberOfMarkers);
+
+    ROS_DEBUG("Rigid body ID: %d", model.rigidBodies[m].ID);
+    ROS_DEBUG("Number of rigid body markers: %d", model.rigidBodies[m].NumberOfMarkers);
+    ROS_DEBUG("pos: [%3.2f,%3.2f,%3.2f], ori: [%3.2f,%3.2f,%3.2f,%3.2f]",
+             model.rigidBodies[m].pose.position.x,
+             model.rigidBodies[m].pose.position.y,
+             model.rigidBodies[m].pose.position.z,
+             model.rigidBodies[m].pose.orientation.x,
+             model.rigidBodies[m].pose.orientation.y,
+             model.rigidBodies[m].pose.orientation.z,
+             model.rigidBodies[m].pose.orientation.w);
+
     if (model.rigidBodies[m].NumberOfMarkers > 0)
     {
       model.rigidBodies[m].marker = new Marker [model.rigidBodies[m].NumberOfMarkers];
+
       size_t byte_count = model.rigidBodies[m].NumberOfMarkers * sizeof(Marker);
       memcpy(model.rigidBodies[m].marker, packet, byte_count);
       seek(byte_count);
@@ -152,6 +169,9 @@ void MoCapDataFormat::parse()
 
     // skip mean marker error
     seek(sizeof(float));
+   
+    // 2.6 or later. 
+    seek(sizeof(short));
   }
 
   // TODO: read skeletons
