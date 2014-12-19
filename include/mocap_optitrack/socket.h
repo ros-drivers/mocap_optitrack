@@ -86,11 +86,14 @@ class UdpMulticastSocket
     /// The buffer size may be obtained from MAXRECV.
     const char* getBuffer() { return &buf[0]; }
 
+    int send(const char* buf, unsigned int sz, int port);
+
   private:
 
     int m_socket;
     sockaddr_in m_local_addr;
-
+    sockaddr_in HostAddr;
+    bool remote_ip_exist;
     char buf [ MAXRECV + 1 ];
 };
 
