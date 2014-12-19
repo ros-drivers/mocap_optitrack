@@ -126,11 +126,10 @@ void PublishedRigidBody::publish(RigidBody &body)
     transform.setOrigin( tf::Vector3(pose.position.x,
                                      pose.position.y,
                                      pose.position.z));
-
     // Handle different coordinate systems (Arena vs. rviz)
     transform.setRotation(q);
     ros::Time timestamp(ros::Time::now());
-    tf_pub.sendTransform(tf::StampedTransform(transform, timestamp, "/odom", frame_id));
+    tf_pub.sendTransform(tf::StampedTransform(transform, timestamp, "/world", frame_id));
   }
 }
 
