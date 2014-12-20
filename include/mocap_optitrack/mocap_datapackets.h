@@ -43,7 +43,7 @@
 #include <sys/types.h>
 #include <iostream>
 #include <string>
-#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseStamped.h>
 
 using namespace std;
 
@@ -86,7 +86,7 @@ class RigidBody
     int NumberOfMarkers;
     Marker *marker;
 
-    const geometry_msgs::Pose get_ros_pose();
+    const geometry_msgs::PoseStamped get_ros_pose();
     bool has_data();
 };
 
@@ -165,4 +165,4 @@ class MoCapDataFormat
     }
 };
 
-#endif	/*__MOCAP_DATAPACKETS_H__*/
+#endif  /*__MOCAP_DATAPACKETS_H__*/

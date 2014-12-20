@@ -43,14 +43,15 @@
  * Please send comments, questions, or patches to skynet@clearpathrobotics.com 
  *
  */
-#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose2D.h>
 #include <tf/transform_datatypes.h>
 #include "mocap_optitrack/mocap_config.h"
 
 const std::string POSE_TOPIC_PARAM_NAME = "pose";
 const std::string POSE2D_TOPIC_PARAM_NAME = "pose2d";
-const std::string FRAME_ID_PARAM_NAME = "frame_id";
+const std::string CHILD_FRAME_ID_PARAM_NAME = "child_frame_id";
+const std::string PARENT_FRAME_ID_PARAM_NAME = "parent_frame_id";
 
 PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node)
 {
@@ -58,12 +59,13 @@ PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node)
   publish_pose = validateParam(config_node, POSE_TOPIC_PARAM_NAME);
   publish_pose2d = validateParam(config_node, POSE2D_TOPIC_PARAM_NAME);
   // only publish tf if a frame ID is provided
-  publish_tf = validateParam(config_node, FRAME_ID_PARAM_NAME);
+  publish_tf = (validateParam(config_node, CHILD_FRAME_ID_PARAM_NAME) && 
+               validateParam(config_node, PARENT_FRAME_ID_PARAM_NAME));
 
   if (publish_pose)
   {
     pose_topic = (std::string&) config_node[POSE_TOPIC_PARAM_NAME];
-    pose_pub = n.advertise<geometry_msgs::Pose>(pose_topic, 1000);
+    pose_pub = n.advertise<geometry_msgs::PoseStamped>(pose_topic, 1000);
   }
 
   if (publish_pose2d)
@@ -74,7 +76,8 @@ PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node)
 
   if (publish_tf)
   {
-    frame_id = (std::string&) config_node[FRAME_ID_PARAM_NAME];
+    child_frame_id = (std::string&) config_node[CHILD_FRAME_ID_PARAM_NAME];
+    parent_frame_id = (std::string&) config_node[PARENT_FRAME_ID_PARAM_NAME];
   }
 }
 
@@ -91,10 +94,12 @@ void PublishedRigidBody::publish(RigidBody &body)
     return;
   }
 
-  const geometry_msgs::Pose pose = body.get_ros_pose();
-  
+  // TODO Below was const, see if there a way to keep it like that.
+  geometry_msgs::PoseStamped pose = body.get_ros_pose();
+
   if (publish_pose)
   {
+    pose.header.frame_id = parent_frame_id;
     pose_pub.publish(pose);
   }
 
@@ -104,17 +109,17 @@ void PublishedRigidBody::publish(RigidBody &body)
     return;
   }
 
-  tf::Quaternion q(pose.orientation.x,
-                   pose.orientation.y,
-                   pose.orientation.z,
-                   pose.orientation.w);
+  tf::Quaternion q(pose.pose.orientation.x,
+                   pose.pose.orientation.y,
+                   pose.pose.orientation.z,
+                   pose.pose.orientation.w);
 
   // publish 2D pose
   if (publish_pose2d)
   {
     geometry_msgs::Pose2D pose2d;
-    pose2d.x = pose.position.x;
-    pose2d.y = pose.position.y;
+    pose2d.x = pose.pose.position.x;
+    pose2d.y = pose.pose.position.y;
     pose2d.theta = tf::getYaw(q);
     pose2d_pub.publish(pose2d);
   }
@@ -123,13 +128,14 @@ void PublishedRigidBody::publish(RigidBody &body)
   {
     // publish transform
     tf::Transform transform;
-    transform.setOrigin( tf::Vector3(pose.position.x,
-                                     pose.position.y,
-                                     pose.position.z));
+    transform.setOrigin( tf::Vector3(pose.pose.position.x,
+                                     pose.pose.position.y,
+                                     pose.pose.position.z));
+
     // Handle different coordinate systems (Arena vs. rviz)
     transform.setRotation(q);
     ros::Time timestamp(ros::Time::now());
-    tf_pub.sendTransform(tf::StampedTransform(transform, timestamp, "/world", frame_id));
+    tf_pub.sendTransform(tf::StampedTransform(transform, timestamp, parent_frame_id, child_frame_id));
   }
 }
 
