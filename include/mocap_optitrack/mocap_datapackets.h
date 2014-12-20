@@ -59,12 +59,12 @@ class Marker
 class Pose
 {
   public:
-    struct {
+    struct __attribute__ ((__packed__)) {
       float x;
       float y;
       float z;
     } position;
-    struct {
+    struct __attribute__ ((__packed__)) {
       float x;
       float y;
       float z;
@@ -140,12 +140,21 @@ class MoCapDataFormat
     /// \brief Parses a NatNet data frame packet as it is streamed by the Arena software according to the descriptions in the NatNet SDK v1.4
     void parse ();
 
+    void setVersion(int nver[4], int sver[4]) {
+      for(int i=0;i<4;++i) {
+        NatNetVersion[i] = nver[i];
+        ServerVersion[i] = sver[i];
+      }
+    }
 
     const char *packet;
     unsigned short length;
 
     int frameNumber;
     ModelFrame model;
+
+    int NatNetVersion[4];
+    int ServerVersion[4];
 
   private:
     void seek(size_t count);
