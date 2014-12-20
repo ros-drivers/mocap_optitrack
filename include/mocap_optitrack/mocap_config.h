@@ -58,7 +58,9 @@ class PublishedRigidBody
 
   std::string pose_topic;
   std::string pose2d_topic;
-  std::string frame_id;
+  std::string parent_frame_id;
+  std::string child_frame_id;
+
 
   bool publish_pose;
   bool publish_tf;
@@ -78,4 +80,4 @@ class PublishedRigidBody
 typedef std::map<int, PublishedRigidBody> RigidBodyMap;
 typedef std::pair<int, PublishedRigidBody> RigidBodyItem;
 
-#endif // __MOCAP_CONFIG_H__
+#endif  // __MOCAP_CONFIG_H__

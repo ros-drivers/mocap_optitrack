@@ -105,6 +105,6 @@ char const * SKELETON_WITHOUT_TOES[] =
 /// Rigid body name for a custom rigid body
 char const * OBJECT[] =
 {
-	"",
-	"object"
+  "",
+  "object"
 };
