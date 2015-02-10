@@ -1,10 +1,9 @@
-<launch> 
-  <node pkg="mocap_optitrack" 
-    type="mocap_node" 
-    name="mocap_node" 
+<launch>
+  <node pkg="mocap_optitrack"
+    type="mocap_node"
+    name="mocap_node"
     respawn="false"
     launch-prefix=""
-    output="screen"
     required="true">
     <rosparam file="$(find mocap_optitrack)/config/mocap.yaml" command="load" />
   </node>
