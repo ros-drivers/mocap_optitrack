@@ -1,4 +1,4 @@
-<launch> 
+<launch>
   <node pkg="mocap_optitrack"
     type="mocap_node"
     name="mocap_node"
