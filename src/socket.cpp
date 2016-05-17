@@ -141,7 +141,7 @@ int UdpMulticastSocket::recv()
     (socklen_t*)&addr_len);
 
   if( status > 0 )
-    ROS_INFO( "%4i bytes received from %s:%i", status, inet_ntoa( remote_addr.sin_addr ), ntohs( remote_addr.sin_port ) );
+    ROS_DEBUG( "%4i bytes received from %s:%i", status, inet_ntoa( remote_addr.sin_addr ), ntohs( remote_addr.sin_port ) );
   else if( status == 0 )
     ROS_INFO( "Connection closed by peer" );
 
