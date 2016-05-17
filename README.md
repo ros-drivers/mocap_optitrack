@@ -1,5 +1,7 @@
 # Optitrack at LASA
 
+[![Build Status](https://travis-ci.org/epfl-lasa/mocap_optitrack.svg?branch=master)](https://travis-ci.org/epfl-lasa/mocap_optitrack)
+
 This package streams ROS pose data (pose messages and TF frames) for detected
 optitrack rigid bodies.
 
