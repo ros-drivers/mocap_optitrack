@@ -26,7 +26,8 @@
 // Constants
 
 // ip on multicast group - cannot be changed in Arena
-const std::string MULTICAST_IP = "224.0.0.1";
+const std::string MULTICAST_IP_KEY = "optitrack_config/multicast_address";
+const std::string MULTICAST_IP_DEFAULT = "224.0.0.1";
 
 const std::string MOCAP_MODEL_KEY = "mocap_model";
 const std::string RIGID_BODIES_KEY = "rigid_bodies";
@@ -36,9 +37,11 @@ const int LOCAL_PORT = 1511;
 
 ////////////////////////////////////////////////////////////////////////
 
-void processMocapData( const char** mocap_model, RigidBodyMap& published_rigid_bodies)
+void processMocapData( const char** mocap_model,
+                       RigidBodyMap& published_rigid_bodies,
+                       const std::string& multicast_ip)
 {
-  UdpMulticastSocket multicast_client_socket( LOCAL_PORT, MULTICAST_IP );
+  UdpMulticastSocket multicast_client_socket( LOCAL_PORT, multicast_ip );
 
   ushort payload;
   int numberOfPackets = 0;
@@ -119,6 +122,16 @@ int main( int argc, char* argv[] )
     }
   }
 
+  // Get configuration from ROS parameter server
+  std::string multicast_ip( MULTICAST_IP_DEFAULT );
+  if( n.hasParam( MULTICAST_IP_KEY ) )
+  {
+    n.getParam( MULTICAST_IP_KEY, multicast_ip );
+  }
+  else {
+    ROS_WARN_STREAM("Could not get multicast address, using default: " << multicast_ip);
+  }
+
   RigidBodyMap published_rigid_bodies;
 
   if (n.hasParam(RIGID_BODIES_KEY))
@@ -145,7 +158,7 @@ int main( int argc, char* argv[] )
   }
 
   // Process mocap data until SIGINT
-  processMocapData(mocap_model, published_rigid_bodies);
+  processMocapData(mocap_model, published_rigid_bodies, multicast_ip);
 
   return 0;
 }
