@@ -13,3 +13,5 @@ rigid_bodies:
         pose2d: Robot_2/ground_pose
         child_frame_id: Robot_2/base_link
         parent_frame_id: world
+optitrack_config:
+        multicast_address: 224.0.0.1
