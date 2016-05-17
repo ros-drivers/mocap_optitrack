@@ -13,15 +13,16 @@ minor modifications (primarily in the configuration options).
 
 ## Quick launch
 
-   roslaunch mocap_optitrack epfl_optitrack.launch
+    roslaunch mocap_optitrack epfl_optitrack.launch
 
 ## Configuration options
 
 By default, this node only streams pose data for rigid body IDs listed in the
-yaml configuration file.  Edit the rigid_bodies configuration (this is standard
+[epfl.yaml](https://github.com/epfl-lasa/mocap_optitrack/blob/master/config/epfl.yaml)
+configuration file.  Edit the rigid_bodies configuration in this file (standard
 yaml syntax) to provide the list of marker IDs (usually integers) that you want
-to track. For each marker, you should specify which topics for the pose, and the
-TF frame name.
+to track. For each marker, you should specify the pose topics, and the name of
+the TF frame (`child_frame_id`).
 
 ## Tips and tricks
 
