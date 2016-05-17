@@ -17,7 +17,7 @@
 
 #include <ros/ros.h>
 
-UdpMulticastSocket::UdpMulticastSocket( const int local_port, const std::string multicast_ip ) 
+UdpMulticastSocket::UdpMulticastSocket( const int local_port, const std::string multicast_ip )
 {
   // Create a UDP socket
   ROS_INFO( "Creating socket..." );
@@ -54,9 +54,9 @@ UdpMulticastSocket::UdpMulticastSocket( const int local_port, const std::string 
   error << "unknown error";
   break;
     }
-    throw SocketException( error.str().c_str() );    
+    throw SocketException( error.str().c_str() );
   }
-  
+
   // Fill struct for local address
   memset ( &m_local_addr, 0, sizeof ( m_local_addr ) );
   m_local_addr.sin_family = AF_INET;
@@ -73,7 +73,7 @@ UdpMulticastSocket::UdpMulticastSocket( const int local_port, const std::string 
     error << "Failed to bind socket to local address:" << strerror( errno );
     throw SocketException( error.str().c_str() );
   }
-  
+
   // Join multicast group
   struct ip_mreq mreq;
   mreq.imr_multiaddr.s_addr = inet_addr( multicast_ip.c_str() );
@@ -106,9 +106,9 @@ UdpMulticastSocket::UdpMulticastSocket( const int local_port, const std::string 
   error << "unknown error";
   break;
     }
-    throw SocketException( error.str().c_str() );    
+    throw SocketException( error.str().c_str() );
   }
-    
+
   // Make socket non-blocking
   ROS_INFO( "Enabling non-blocking I/O" );
   int flags = fcntl( m_socket, F_GETFL , 0 );
