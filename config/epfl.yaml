@@ -1,7 +1,9 @@
+# Definition of all trackable objects (rigid bodies) and their respective
+# pose topics and TF frame name (child_frame_id).
 #
-# Definition of all trackable objects
-# Identifier corresponds to Trackable ID set in Tracking Tools
-#
+# The marker ID corresponds to the *User Data* field in the Motive
+#  configuration.
+
 rigid_bodies:
     '1':
         pose: Robot_1/pose
