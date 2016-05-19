@@ -6,7 +6,7 @@
 #include <ros/console.h>
 using namespace std;
 
-RigidBody::RigidBody() 
+RigidBody::RigidBody()
   : NumberOfMarkers(0), marker(0)
 {
 }
@@ -50,7 +50,7 @@ ModelDescription::~ModelDescription()
 }
 
 ModelFrame::ModelFrame()
-  : markerSets(0), otherMarkers(0), rigidBodies(0), 
+  : markerSets(0), otherMarkers(0), rigidBodies(0),
     numMarkerSets(0), numOtherMarkers(0), numRigidBodies(0),
     latency(0.0)
 {
@@ -63,7 +63,7 @@ ModelFrame::~ModelFrame()
   delete[] rigidBodies;
 }
 
-MoCapDataFormat::MoCapDataFormat(const char *packet, unsigned short length) 
+MoCapDataFormat::MoCapDataFormat(const char *packet, unsigned short length)
   : packet(packet), length(length), frameNumber(0)
 {
 }
@@ -152,6 +152,8 @@ void MoCapDataFormat::parse()
 
     // skip mean marker error
     seek(sizeof(float));
+    // Newer NatNet protocol requires we skip an additional two bytes.
+    seek(sizeof(short));
   }
 
   // TODO: read skeletons
@@ -161,5 +163,3 @@ void MoCapDataFormat::parse()
   // get latency
   read_and_seek(model.latency);
 }
-
-
