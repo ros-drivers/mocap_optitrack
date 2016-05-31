@@ -77,9 +77,14 @@ void processMocapData( const char** mocap_model,
               int ID = format.model.rigidBodies[i].ID;
               RigidBodyMap::iterator item = published_rigid_bodies.find(ID);
 
-              if (item != published_rigid_bodies.end())
-              {
+              if (item != published_rigid_bodies.end()) {
                   item->second.publish(format.model.rigidBodies[i]);
+              } else {
+                // NOTE that this only prints a message for the *first* ignored
+                // marker (not each marker) because of how ROS_WARN_ONCE works.
+                ROS_WARN_STREAM_ONCE("Ignoring unknown marker (ID = " << ID
+                                     << ") because it is not configured "
+                                     << "(other markers may also be ignored).");
               }
             }
           }
