@@ -6,7 +6,7 @@
 #include <ros/console.h>
 using namespace std;
 
-RigidBody::RigidBody() 
+RigidBody::RigidBody()
   : NumberOfMarkers(0), marker(0)
 {
 }
@@ -16,20 +16,34 @@ RigidBody::~RigidBody()
   delete[] marker;
 }
 
-const geometry_msgs::PoseStamped RigidBody::get_ros_pose()
+const geometry_msgs::PoseStamped RigidBody::get_ros_pose(bool newCoordinates)
 {
   geometry_msgs::PoseStamped ros_pose;
   ros_pose.header.stamp = ros::Time::now();
-  // y & z axes are swapped in the Optitrack coordinate system
-  ros_pose.pose.position.x = pose.position.x;
-  ros_pose.pose.position.y = -pose.position.z;
-  ros_pose.pose.position.z = pose.position.y;
+  if (newCoordinates)
+  {
+    // Motive 1.7+ coordinate system
+    ros_pose.pose.position.x = -pose.position.x;
+    ros_pose.pose.position.y = pose.position.z;
+    ros_pose.pose.position.z = pose.position.y;
 
-  ros_pose.pose.orientation.x = pose.orientation.x;
-  ros_pose.pose.orientation.y = -pose.orientation.z;
-  ros_pose.pose.orientation.z = pose.orientation.y;
-  ros_pose.pose.orientation.w = pose.orientation.w;
+    ros_pose.pose.orientation.x = -pose.orientation.x;
+    ros_pose.pose.orientation.y = pose.orientation.z;
+    ros_pose.pose.orientation.z = pose.orientation.y;
+    ros_pose.pose.orientation.w = pose.orientation.w;
+  }
+  else
+  {
+    // y & z axes are swapped in the Optitrack coordinate system
+    ros_pose.pose.position.x = pose.position.x;
+    ros_pose.pose.position.y = -pose.position.z;
+    ros_pose.pose.position.z = pose.position.y;
 
+    ros_pose.pose.orientation.x = pose.orientation.x;
+    ros_pose.pose.orientation.y = -pose.orientation.z;
+    ros_pose.pose.orientation.z = pose.orientation.y;
+    ros_pose.pose.orientation.w = pose.orientation.w;
+  }
   return ros_pose;
 }
 
@@ -50,7 +64,7 @@ ModelDescription::~ModelDescription()
 }
 
 ModelFrame::ModelFrame()
-  : markerSets(0), otherMarkers(0), rigidBodies(0), 
+  : markerSets(0), otherMarkers(0), rigidBodies(0),
     numMarkerSets(0), numOtherMarkers(0), numRigidBodies(0),
     latency(0.0)
 {
@@ -63,7 +77,7 @@ ModelFrame::~ModelFrame()
   delete[] rigidBodies;
 }
 
-MoCapDataFormat::MoCapDataFormat(const char *packet, unsigned short length) 
+MoCapDataFormat::MoCapDataFormat(const char *packet, unsigned short length)
   : packet(packet), length(length), frameNumber(0)
 {
 }
@@ -169,8 +183,8 @@ void MoCapDataFormat::parse()
 
     // skip mean marker error
     seek(sizeof(float));
-   
-    // 2.6 or later. 
+
+    // 2.6 or later.
     seek(sizeof(short));
   }
 
@@ -181,5 +195,3 @@ void MoCapDataFormat::parse()
   // get latency
   read_and_seek(model.latency);
 }
-
-

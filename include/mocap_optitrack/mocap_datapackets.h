@@ -80,13 +80,13 @@ class RigidBody
     ~RigidBody();
 
     int ID;
-    
-    Pose pose; 
+
+    Pose pose;
 
     int NumberOfMarkers;
     Marker *marker;
 
-    const geometry_msgs::PoseStamped get_ros_pose();
+    const geometry_msgs::PoseStamped get_ros_pose(bool newCoordinates);
     bool has_data();
 };
 
