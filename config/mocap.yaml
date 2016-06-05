@@ -8,10 +8,12 @@ rigid_bodies:
         pose2d: Robot_1/ground_pose
         child_frame_id: Robot_1/base_link
         parent_frame_id: world
+        use_new_coordinates: false
     '2':
         pose: Robot_2/pose
         pose2d: Robot_2/ground_pose
         child_frame_id: Robot_2/base_link
         parent_frame_id: world
+        use_new_coordinates: false
 optitrack_config:
         multicast_address: 224.0.0.1
