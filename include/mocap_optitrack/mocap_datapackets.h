@@ -130,6 +130,28 @@ class ModelFrame
     float latency;
 };
 
+/// \breif Version class containing the version information and helpers for comparison.
+class Version
+{
+  public:
+    Version();
+    Version(int major, int minor, int revision, int build);
+    Version(const std::string& version);
+    ~Version();
+
+    void setVersion(int major, int minor, int revision, int build);
+    const std::string& getVersionString();
+    bool operator > (const Version& comparison);
+    bool operator == (const Version& comparison);
+
+    int v_major;
+    int v_minor;
+    int v_revision;
+    int v_build;
+    std::string v_string;
+};
+
+
 /// \brief Parser for a NatNet data frame packet
 class MoCapDataFormat
 {
@@ -140,11 +162,10 @@ class MoCapDataFormat
     /// \brief Parses a NatNet data frame packet as it is streamed by the Arena software according to the descriptions in the NatNet SDK v1.4
     void parse ();
 
-    void setVersion(int nver[4], int sver[4]) {
-      for(int i=0;i<4;++i) {
-        NatNetVersion[i] = nver[i];
-        ServerVersion[i] = sver[i];
-      }
+    void setVersion(int nver[4], int sver[4])
+    {
+      NatNetVersion.setVersion(nver[0], nver[1], nver[2], nver[3]);
+      ServerVersion.setVersion(sver[0], sver[1], sver[2], sver[3]);
     }
 
     const char *packet;
@@ -153,8 +174,8 @@ class MoCapDataFormat
     int frameNumber;
     ModelFrame model;
 
-    int NatNetVersion[4];
-    int ServerVersion[4];
+    Version NatNetVersion;
+    Version ServerVersion;
 
   private:
     void seek(size_t count);
