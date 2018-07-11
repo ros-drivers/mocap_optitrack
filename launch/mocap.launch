@@ -8,6 +8,7 @@
         type="mocap_node"
         name="mocap_node"
         respawn="false"
+	output="screen"
         launch-prefix=""
         required="true">
     <rosparam file="$(arg mocap_config_file)" command="load" />

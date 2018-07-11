@@ -4,7 +4,9 @@ add_executable(${PROJECT_NAME}_mocap_node
   mocap_config.cpp
   mocap_datapackets.cpp
   socket.cpp
+  mocap_calibrate.cpp
 )
+
 target_link_libraries(${PROJECT_NAME}_mocap_node ${catkin_LIBRARIES})
 set_target_properties(${PROJECT_NAME}_mocap_node PROPERTIES
                       OUTPUT_NAME mocap_node PREFIX "")

@@ -8,16 +8,16 @@
  *   \ \_/ \_/ /  | |  | |  | ++ | |_| || ++ / | ++_/| |_| |  | |  | +-+ |
  *    \  \_/  /   | |_ | |_ | ++ |  _  || |\ \ | |   |  _  |  | |  | +-+ |
  *     \_____/    \___/|___||___||_| |_||_| \_\|_|   |_| |_|  |_|  |_| |_|
- *             ROBOTICS™ 
+ *             ROBOTICS™
  *
  *  File: mocap_config.cpp
  *  Desc: Classes representing ROS configuration for mocap_optitrack node. Data
  *  will be published to differed topics based on the configuration provided.
  *  Auth: Alex Bencz
  *
- *  Copyright (c) 2012, Clearpath Robotics, Inc. 
+ *  Copyright (c) 2012, Clearpath Robotics, Inc.
  *  All Rights Reserved
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *     * Redistributions of source code must retain the above copyright
@@ -28,7 +28,7 @@
  *     * Neither the name of Clearpath Robotics, Inc. nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -39,8 +39,8 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * Please send comments, questions, or patches to skynet@clearpathrobotics.com 
+ *
+ * Please send comments, questions, or patches to skynet@clearpathrobotics.com
  *
  */
 #include <geometry_msgs/PoseStamped.h>
@@ -52,6 +52,7 @@ const std::string POSE_TOPIC_PARAM_NAME = "pose";
 const std::string POSE2D_TOPIC_PARAM_NAME = "pose2d";
 const std::string CHILD_FRAME_ID_PARAM_NAME = "child_frame_id";
 const std::string PARENT_FRAME_ID_PARAM_NAME = "parent_frame_id";
+const std::string NEW_COORDINATE_FRAME_PARAM_NAME = "use_new_coordinates";
 
 PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node)
 {
@@ -59,8 +60,9 @@ PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node)
   publish_pose = validateParam(config_node, POSE_TOPIC_PARAM_NAME);
   publish_pose2d = validateParam(config_node, POSE2D_TOPIC_PARAM_NAME);
   // only publish tf if a frame ID is provided
-  publish_tf = (validateParam(config_node, CHILD_FRAME_ID_PARAM_NAME) && 
-               validateParam(config_node, PARENT_FRAME_ID_PARAM_NAME));
+  publish_tf = (validateParam(config_node, CHILD_FRAME_ID_PARAM_NAME) &&
+                validateParam(config_node, PARENT_FRAME_ID_PARAM_NAME));
+  use_new_coordinates = validateParam(config_node, NEW_COORDINATE_FRAME_PARAM_NAME);
 
   if (publish_pose)
   {
@@ -95,7 +97,7 @@ void PublishedRigidBody::publish(RigidBody &body)
   }
 
   // TODO Below was const, see if there a way to keep it like that.
-  geometry_msgs::PoseStamped pose = body.get_ros_pose();
+  geometry_msgs::PoseStamped pose = body.get_ros_pose(use_new_coordinates);
 
   if (publish_pose)
   {
@@ -141,16 +143,14 @@ void PublishedRigidBody::publish(RigidBody &body)
 
 bool PublishedRigidBody::validateParam(XmlRpc::XmlRpcValue &config_node, const std::string &name)
 {
-  if (!config_node.hasMember(name))
+  if (config_node[name].getType() == XmlRpc::XmlRpcValue::TypeString)
   {
-    return false;
+    return true;
+  }
+  else if (config_node[name].getType() == XmlRpc::XmlRpcValue::TypeBoolean)
+  {
+    return static_cast<bool>(XmlRpc::XmlRpcValue(config_node[name]));
   }
 
-  if (config_node[name].getType() != XmlRpc::XmlRpcValue::TypeString)
-  {
-    return false;
-  }
-
-  return true;
+  return false;
 }
-
