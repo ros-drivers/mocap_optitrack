@@ -34,7 +34,7 @@ const char ** DEFAULT_MOCAP_MODEL = OBJECT;
 //const char ** DEFAULT_MOCAP_MODEL = SKELETON_WITHOUT_TOES;
 
 const int COMMAND_PORT = 1510;
-const int LOCAL_PORT = 1511;
+const int LOCAL_PORT = 9000;
 
 // NATNET message ids
 #define NAT_PING                    0
