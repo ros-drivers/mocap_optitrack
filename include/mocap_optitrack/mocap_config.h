@@ -49,7 +49,11 @@
 
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
-#include "mocap_datapackets.h"
+// #include "mocap_datapackets.h"
+#include "data_model.h"
+
+namespace mocap_optitrack
+{
 
 class PublishedRigidBody
 {
@@ -80,5 +84,7 @@ class PublishedRigidBody
 
 typedef std::map<int, PublishedRigidBody> RigidBodyMap;
 typedef std::pair<int, PublishedRigidBody> RigidBodyItem;
+
+}
 
 #endif  // __MOCAP_CONFIG_H__

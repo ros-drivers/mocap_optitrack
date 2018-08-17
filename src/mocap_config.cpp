@@ -48,6 +48,9 @@
 #include <tf/transform_datatypes.h>
 #include "mocap_optitrack/mocap_config.h"
 
+namespace mocap_optitrack
+{
+
 const std::string POSE_TOPIC_PARAM_NAME = "pose";
 const std::string POSE2D_TOPIC_PARAM_NAME = "pose2d";
 const std::string CHILD_FRAME_ID_PARAM_NAME = "child_frame_id";
@@ -86,7 +89,7 @@ PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node)
 void PublishedRigidBody::publish(RigidBody &body)
 {
   // don't do anything if no new data was provided
-  if (!body.has_data())
+  if (!body.hasData())
   {
     return;
   }
@@ -97,7 +100,7 @@ void PublishedRigidBody::publish(RigidBody &body)
   }
 
   // TODO Below was const, see if there a way to keep it like that.
-  geometry_msgs::PoseStamped pose = body.get_ros_pose(use_new_coordinates);
+  geometry_msgs::PoseStamped pose = body.getRosPose(use_new_coordinates);
 
   if (publish_pose)
   {
@@ -153,4 +156,6 @@ bool PublishedRigidBody::validateParam(XmlRpc::XmlRpcValue &config_node, const s
   }
 
   return false;
+}
+
 }

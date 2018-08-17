@@ -43,147 +43,41 @@
 #include <sys/types.h>
 #include <iostream>
 #include <string>
-#include <geometry_msgs/PoseStamped.h>
+
+
+#include <mocap_optitrack/version.h>
 
 using namespace std;
 
-/// \brief Data object holding the position of a single mocap marker in 3d space
-class Marker
-{
-  public:
-    float positionX;
-    float positionY;
-    float positionZ;
-};
-
-class Pose
-{
-  public:
-    struct __attribute__ ((__packed__)) {
-      float x;
-      float y;
-      float z;
-    } position;
-    struct __attribute__ ((__packed__)) {
-      float x;
-      float y;
-      float z;
-      float w;
-    } orientation;
-};
-
-/// \brief Data object holding information about a single rigid body within a mocap skeleton
-class RigidBody
-{
-  public:
-    RigidBody();
-    ~RigidBody();
-
-    int ID;
-
-    Pose pose;
-
-    int NumberOfMarkers;
-    Marker *marker;
-
-    const geometry_msgs::PoseStamped get_ros_pose(bool newCoordinates);
-    bool has_data();
-};
-
-/// \brief Data object describing a single tracked model
-class ModelDescription
-{
-  public:
-    ModelDescription();
-    ~ModelDescription();
-
-    string name;
-    int numMarkers;
-    string *markerNames;
-};
-
-class MarkerSet
-{
-  public:
-    MarkerSet() : numMarkers(0), markers(0) {}
-    ~MarkerSet() { delete[] markers; }
-    char name[256];
-    int numMarkers;
-    Marker *markers;
-};
-
-/// \brief Data object holding poses of a tracked model's components
-class ModelFrame
-{
-  public:
-    ModelFrame();
-    ~ModelFrame();
-
-    MarkerSet *markerSets;
-    Marker *otherMarkers;
-    RigidBody *rigidBodies;
-
-    int numMarkerSets;
-    int numOtherMarkers;
-    int numRigidBodies;
-
-    float latency;
-};
-
-/// \breif Version class containing the version information and helpers for comparison.
-class Version
-{
-  public:
-    Version();
-    Version(int major, int minor, int revision, int build);
-    Version(const std::string& version);
-    ~Version();
-
-    void setVersion(int major, int minor, int revision, int build);
-    const std::string& getVersionString();
-    bool operator > (const Version& comparison);
-    bool operator == (const Version& comparison);
-
-    int v_major;
-    int v_minor;
-    int v_revision;
-    int v_build;
-    std::string v_string;
-};
-
-
 /// \brief Parser for a NatNet data frame packet
-class MoCapDataFormat
+class NatNetParser
 {
   public:
-    MoCapDataFormat(const char *packet, unsigned short length);
-    ~MoCapDataFormat();
+    NatNetParser();
+    ~NatNetParser();
 
     /// \brief Parses a NatNet data frame packet as it is streamed by the Arena software according to the descriptions in the NatNet SDK v1.4
-    void parse ();
+    void parse(const char* msg_buffer, int numBytes);
 
-    void setVersion(int nver[4], int sver[4])
-    {
-      NatNetVersion.setVersion(nver[0], nver[1], nver[2], nver[3]);
-      ServerVersion.setVersion(sver[0], sver[1], sver[2], sver[3]);
-    }
-
-    const char *packet;
-    unsigned short length;
-
-    int frameNumber;
     ModelFrame model;
 
-    Version NatNetVersion;
-    Version ServerVersion;
+    Version natNetVersion;
+    Version serverVersion;
+    bool haveVersion;
 
   private:
-    void seek(size_t count);
-    template <typename T> void read_and_seek(T& target)
+    void setVersion(int nver[4], int sver[4])
     {
-        target = *((T*) packet);
-        seek(sizeof(T));
+      natNetVersion.setVersion(nver[0], nver[1], nver[2], nver[3]);
+      serverVersion.setVersion(sver[0], sver[1], sver[2], sver[3]);
     }
+
+    void decodeMarkerID(int sourceID, int* pOutEntityID, int* pOutMemberID);
+    bool decodeTimecode(unsigned int inTimecode, unsigned int inTimecodeSubframe, int* hour, int* minute, int* second, int* frame, int* subframe);
+    bool timecodeStringify(unsigned int inTimecode, unsigned int inTimecodeSubframe, char *Buffer, int BufferSize);
+
+    void parseRigidBody(RigidBody&);
+    void parseMocapDataFrame();
 };
 
 #endif  /*__MOCAP_DATAPACKETS_H__*/

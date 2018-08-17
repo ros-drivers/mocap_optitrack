@@ -4,17 +4,21 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <cstdint>
+#include <cinttypes>
 #include <ros/console.h>
+
+#include "natnet_packet_definition.h"
+
 using namespace std;
 
+
 RigidBody::RigidBody()
-  : NumberOfMarkers(0), marker(0)
 {
 }
 
 RigidBody::~RigidBody()
 {
-  delete[] marker;
 }
 
 const geometry_msgs::PoseStamped RigidBody::get_ros_pose(bool newCoordinates)
@@ -78,181 +82,150 @@ ModelFrame::~ModelFrame()
   delete[] rigidBodies;
 }
 
-Version::Version()
-  : v_major(0), v_minor(0), v_revision(0), v_build(0)
+NatNetParser::NatNetParser()
+  : haveVersion(false)
 {
 }
 
-Version::Version(int major, int minor, int revision, int build)
-  : v_major(major), v_minor(minor), v_revision(revision), v_build(build)
-{
-  std::ostringstream ostr;
-  ostr << v_major << "." << v_minor << "." << v_revision << "." << v_build;
-  v_string  = ostr.str();
-}
-
-Version::Version(const std::string& version)
-  : v_string(version)
-{
-  std::sscanf(version.c_str(), "%d.%d.%d.%d", &v_major, &v_minor, &v_revision, &v_build);
-}
-
-Version::~Version()
-{
-}
-void Version::setVersion(int major, int minor, int revision, int build)
-{
-  v_major = major;
-  v_minor = minor;
-  v_revision = revision;
-  v_build = build;
-
-}
-
-const std::string& Version::getVersionString()
-{
-  return this->v_string;
-}
-
-bool Version::operator > (const Version& comparison)
-{
-  if (v_major > comparison.v_major)
-    return true;
-  if (v_minor > comparison.v_minor)
-    return true;
-  if (v_revision > comparison.v_revision)
-    return true;
-  if (v_build > comparison.v_build)
-    return true;
-  return false;
-}
-bool Version::operator == (const Version& comparison)
-{
-  return v_major == comparison.v_major
-      && v_minor == comparison.v_minor
-      && v_revision == comparison.v_revision
-      && v_build == comparison.v_build;
-}
-
-MoCapDataFormat::MoCapDataFormat(const char *packet, unsigned short length)
-  : packet(packet), length(length), frameNumber(0)
+NatNetParser::~NatNetParser()
 {
 }
 
-MoCapDataFormat::~MoCapDataFormat()
+void NatNetParser::parse(const char* msgBuffer, int numBytes)
 {
-}
+  // Make a local copy of incoming message
+  natnet::Packet packet;
+  memcpy((char*)&packet, msgBuffer, numBytes);
+  ROS_DEBUG("Message ID: %d", packet.messageId);
+  ROS_DEBUG("Byte count : %d", numBytes);
 
-void MoCapDataFormat::seek(size_t count)
-{
-  packet += count;
-  length -= count;
-}
-
-void MoCapDataFormat::parse()
-{
-  seek(4); // skip 4-bytes. Header and size.
-
-  // parse frame number
-  read_and_seek(frameNumber);
-  ROS_DEBUG("Frame number: %d", frameNumber);
-
-  // count number of packetsets
-  read_and_seek(model.numMarkerSets);
-  model.markerSets = new MarkerSet[model.numMarkerSets];
-  ROS_DEBUG("Number of marker sets: %d", model.numMarkerSets);
-
-  for (int i = 0; i < model.numMarkerSets; i++)
+  // Handle the message type
+  switch (packet.messageId)
   {
-    strcpy(model.markerSets[i].name, packet);
-    seek(strlen(model.markerSets[i].name) + 1);
+    case natnet::MessageType::ModelDef:
+    case natnet::MessageType::FrameOfData:
+      if (haveVersion)
+      {
+        parseMocapDataFrame(packet);
+      }
+      else
+      {
+        ROS_WARN("Packet version not received from server. Parsing data message aborted.");
+      }
+      break;
+    case natnet::MessageType::ServerInfo:
+      int nver[4] = {0, 0, 0, 0};
+      int sver[4] = {0, 0, 0, 0};
+      for(int i=0;i<4;++i) {
+        nver[i] = (int)PacketIn.Data.Sender.NatNetVersion[i];
+        sver[i] = (int)PacketIn.Data.Sender.Version[i];
+      }
+      setVersion(nver, sver);
 
-    ROS_DEBUG("Parsing marker set named: %s", model.markerSets[i].name);
+      ROS_INFO_ONCE("NATNet Version : %d.%d.%d.%d", nver[0], nver[1], nver[2], nver[3]);
+      ROS_INFO_ONCE("Server Version : %d.%d.%d.%d", sver[0], sver[1], sver[2], sver[3]);
+      haveVersion = true;
+      break;
+    case natnet::MessageType::UnrecognizedRequest:
+    case natnet::MessageType::Unknown:
+      ROS_WARN("Received unrecognized request");
+      break;
+  }
 
-    // read number of markers that belong to the model
-    read_and_seek(model.markerSets[i].numMarkers);
-    ROS_DEBUG("Number of markers in set: %d", model.markerSets[i].numMarkers);
-    model.markerSets[i].markers = new Marker[model.markerSets[i].numMarkers];
+  // // // First 2 Bytes is message ID
+  // short MessageID = 0;
+  // read_and_seek(packet, MessageID);
+  // ROS_DEBUG("Message ID: %d", MessageID);
 
-    for (int k = 0; k < model.markerSets[i].numMarkers; k++)
+  // // Second 2 Bytes is the size of the packet
+  // short nBytes = 0;
+  // read_and_seek(packet, nBytes);
+  // ROS_DEBUG("Byte count : %d", nBytes);
+  // seek(packet, 4);
+
+  // if (MessageID == 7)
+  // {
+    // parseMocapDataFrame();
+  // }
+  // TODO: implement parsing of other message IDs
+}
+
+void NatNetParser::decodeMarkerID(int sourceID, int* pOutEntityID, int* pOutMemberID)
+{
+    if (pOutEntityID)
+        *pOutEntityID = sourceID >> 16;
+
+    if (pOutMemberID)
+        *pOutMemberID = sourceID & 0x0000ffff;
+}
+
+// Funtion that assigns a time code values to 5 variables passed as arguments
+// Requires an integer from the packet as the timecode and timecodeSubframe
+bool NatNetParser::decodeTimecode(unsigned int inTimecode, unsigned int inTimecodeSubframe, int* hour, int* minute, int* second, int* frame, int* subframe)
+{
+  bool bValid = true;
+
+  *hour = (inTimecode>>24)&255;
+  *minute = (inTimecode>>16)&255;
+  *second = (inTimecode>>8)&255;
+  *frame = inTimecode&255;
+  *subframe = inTimecodeSubframe;
+
+  return bValid;
+}
+
+// Takes timecode and assigns it to a string
+bool NatNetParser::timecodeStringify(unsigned int inTimecode, unsigned int inTimecodeSubframe, char *Buffer, int BufferSize)
+{
+  bool bValid;
+  int hour, minute, second, frame, subframe;
+  bValid = decodeTimecode(inTimecode, inTimecodeSubframe, &hour, &minute, &second, &frame, &subframe);
+
+  snprintf(Buffer,BufferSize,"%2d:%2d:%2d:%2d.%d",hour, minute, second, frame, subframe);
+  for(unsigned int i=0; i < strlen(Buffer); i++)
+  {
+    if(Buffer[i]==' ')
     {
-      // read marker positions
-      read_and_seek(model.markerSets[i].markers[k]);
-      float x = model.markerSets[i].markers[k].positionX;
-      float y = model.markerSets[i].markers[k].positionY;
-      float z = model.markerSets[i].markers[k].positionZ;
-      ROS_DEBUG("\t marker %d: [x=%3.2f,y=%3.2f,z=%3.2f]", k, x, y, z);
+      Buffer[i]='0';
     }
   }
 
-  // read number of 'other' markers. Unidentified markers. (cf. NatNet specs)
-  read_and_seek(model.numOtherMarkers);
-  model.otherMarkers = new Marker[model.numOtherMarkers];
-  ROS_DEBUG("Number of markers not in sets: %d", model.numOtherMarkers);
-
-  for (int l = 0; l < model.numOtherMarkers; l++)
-  {
-    // read positions of 'other' markers
-    read_and_seek(model.otherMarkers[l]);
-  }
-
-  // read number of rigid bodies of the model
-  read_and_seek(model.numRigidBodies);
-  ROS_DEBUG("Number of rigid bodies: %d", model.numRigidBodies);
-
-  model.rigidBodies = new RigidBody[model.numRigidBodies];
-  for (int m = 0; m < model.numRigidBodies; m++)
-  {
-    // read id, position and orientation of each rigid body
-    read_and_seek(model.rigidBodies[m].ID);
-    read_and_seek(model.rigidBodies[m].pose);
-
-    // get number of markers per rigid body
-    read_and_seek(model.rigidBodies[m].NumberOfMarkers);
-
-    ROS_DEBUG("Rigid body ID: %d", model.rigidBodies[m].ID);
-    ROS_DEBUG("Number of rigid body markers: %d", model.rigidBodies[m].NumberOfMarkers);
-    ROS_DEBUG("pos: [%3.2f,%3.2f,%3.2f], ori: [%3.2f,%3.2f,%3.2f,%3.2f]",
-             model.rigidBodies[m].pose.position.x,
-             model.rigidBodies[m].pose.position.y,
-             model.rigidBodies[m].pose.position.z,
-             model.rigidBodies[m].pose.orientation.x,
-             model.rigidBodies[m].pose.orientation.y,
-             model.rigidBodies[m].pose.orientation.z,
-             model.rigidBodies[m].pose.orientation.w);
-
-    if (model.rigidBodies[m].NumberOfMarkers > 0)
-    {
-      model.rigidBodies[m].marker = new Marker [model.rigidBodies[m].NumberOfMarkers];
-
-      size_t byte_count = model.rigidBodies[m].NumberOfMarkers * sizeof(Marker);
-      memcpy(model.rigidBodies[m].marker, packet, byte_count);
-      seek(byte_count);
-
-      // skip marker IDs
-      byte_count = model.rigidBodies[m].NumberOfMarkers * sizeof(int);
-      seek(byte_count);
-
-      // skip marker sizes
-      byte_count = model.rigidBodies[m].NumberOfMarkers * sizeof(float);
-      seek(byte_count);
-    }
-
-    // skip mean marker error
-    seek(sizeof(float));
-
-    // 2.6 or later.
-    if (NatNetVersion > Version("2.6"))
-    {
-      seek(sizeof(short));
-    }
-
-  }
-
-  // TODO: read skeletons
-  int numSkeletons = 0;
-  read_and_seek(numSkeletons);
-
-  // get latency
-  read_and_seek(model.latency);
+  return bValid;
 }
+
+void NatNetParser::parseRigidBody(RigidBody &rigidBody)
+{
+  // Read id, position and orientation of each rigid body
+  read_and_seek(packet, rigidBody.ID);
+  read_and_seek(packet, rigidBody.pose);
+
+  ROS_DEBUG("Rigid body ID: %d", rigidBody.ID);
+  ROS_DEBUG("pos: [%3.2f,%3.2f,%3.2f], ori: [%3.2f,%3.2f,%3.2f,%3.2f]",
+           rigidBody.pose.position.x,
+           rigidBody.pose.position.y,
+           rigidBody.pose.position.z,
+           rigidBody.pose.orientation.x,
+           rigidBody.pose.orientation.y,
+           rigidBody.pose.orientation.z,
+           rigidBody.pose.orientation.w);
+
+  // NatNet version 2.0 and later
+  if (NatNetVersion >= Version("2.0"))
+  {
+    // Mean marker error
+    read_and_seek(packet, rigidBody.meanMarkerError);
+    ROS_DEBUG("Mean marker error: %3.2f\n", rigidBody.meanMarkerError);
+  }
+
+  // NatNet version 2.6 and later
+  if (NatNetVersion >= Version("2.6"))
+  {
+    // params
+    short params = 0; 
+    read_and_seek(packet, params);
+    rigidBody.isTrackingValid = params & 0x01; // 0x01 : rigid body was successfully tracked in this frame
+    ROS_DEBUG("Rigid body successfully tracked in this frame: %s", 
+      (rigidBody.isTrackingValid ? "YES" : "NO"));
+  }
+}
+
