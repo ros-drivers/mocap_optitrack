@@ -47,6 +47,7 @@
 #include <geometry_msgs/Pose2D.h>
 #include <tf/transform_datatypes.h>
 #include "mocap_optitrack/mocap_config.h"
+#include "data_conversions.h"
 
 namespace mocap_optitrack
 {
@@ -86,10 +87,10 @@ PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node)
   }
 }
 
-void PublishedRigidBody::publish(RigidBody &body)
+void PublishedRigidBody::publish(RigidBody const& body)
 {
   // don't do anything if no new data was provided
-  if (!body.hasData())
+  if (!body.hasValidData())
   {
     return;
   }
@@ -100,7 +101,7 @@ void PublishedRigidBody::publish(RigidBody &body)
   }
 
   // TODO Below was const, see if there a way to keep it like that.
-  geometry_msgs::PoseStamped pose = body.getRosPose(use_new_coordinates);
+  geometry_msgs::PoseStamped pose = getRosPose(body, use_new_coordinates);
 
   if (publish_pose)
   {

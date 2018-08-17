@@ -18,7 +18,9 @@ Version::Version(int major, int minor, int revision, int build)
 Version::Version(const std::string& version)
   : v_string(version)
 {
-  std::sscanf(version.c_str(), "%d.%d.%d.%d", &v_major, &v_minor, &v_revision, &v_build);
+  int major=0, minor=0, revision=0, build=0;
+  std::sscanf(version.c_str(), "%d.%d.%d.%d", &major, &minor, &revision, &build);
+  setVersion(major, minor, revision, build);
 }
 
 Version::~Version()
@@ -36,12 +38,12 @@ void Version::setVersion(int major, int minor, int revision, int build)
   v_string  = sstr.str();
 }
 
-const std::string& Version::getVersionString()
+std::string const& Version::getVersionString() const
 {
   return v_string;
 }
 
-bool Version::operator > (const Version& comparison)
+bool Version::operator > (const Version& comparison) const
 {
   if (v_major > comparison.v_major)
     return true;
@@ -54,12 +56,12 @@ bool Version::operator > (const Version& comparison)
   return false;
 }
 
-bool Version::operator >= (const Version& comparison)
+bool Version::operator >= (const Version& comparison) const
 {
   return ((*this > comparison) || (*this == comparison));
 }
 
-bool Version::operator < (const Version& comparison)
+bool Version::operator < (const Version& comparison) const
 {
   if (v_major < comparison.v_major)
     return true;
@@ -72,12 +74,12 @@ bool Version::operator < (const Version& comparison)
   return false;
 }
 
-bool Version::operator <= (const Version& comparison)
+bool Version::operator <= (const Version& comparison) const
 {
   return ((*this < comparison) || (*this == comparison));
 }
 
-bool Version::operator == (const Version& comparison)
+bool Version::operator == (const Version& comparison) const
 {
   return v_major == comparison.v_major
       && v_minor == comparison.v_minor

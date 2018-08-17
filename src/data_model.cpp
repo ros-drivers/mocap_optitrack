@@ -3,67 +3,75 @@
 namespace mocap_optitrack
 {
 
-RigidBody::RigidBody()
+RigidBody::RigidBody() : 
+  isTrackingValid(false)
 {
 }
 
-const geometry_msgs::PoseStamped RigidBody::getRosPose(bool newCoordinates)
+bool RigidBody::hasValidData() const
 {
-  geometry_msgs::PoseStamped ros_pose;
-  ros_pose.header.stamp = ros::Time::now();
-  if (newCoordinates)
-  {
-    // Motive 1.7+ coordinate system
-    ros_pose.pose.position.x = -pose.position.x;
-    ros_pose.pose.position.y = pose.position.z;
-    ros_pose.pose.position.z = pose.position.y;
-
-    ros_pose.pose.orientation.x = -pose.orientation.x;
-    ros_pose.pose.orientation.y = pose.orientation.z;
-    ros_pose.pose.orientation.z = pose.orientation.y;
-    ros_pose.pose.orientation.w = pose.orientation.w;
-  }
-  else
-  {
-    // y & z axes are swapped in the Optitrack coordinate system
-    ros_pose.pose.position.x = pose.position.x;
-    ros_pose.pose.position.y = -pose.position.z;
-    ros_pose.pose.position.z = pose.position.y;
-
-    ros_pose.pose.orientation.x = pose.orientation.x;
-    ros_pose.pose.orientation.y = -pose.orientation.z;
-    ros_pose.pose.orientation.z = pose.orientation.y;
-    ros_pose.pose.orientation.w = pose.orientation.w;
-  }
-  return ros_pose;
+    return isTrackingValid;
 }
 
-bool RigidBody::hasData()
+
+void ModelDescription::clear()
 {
-    static const char zero[sizeof(pose)] = { 0 };
-    return memcmp(zero, (char*) &pose, sizeof(pose));
+  markerNames.clear();
 }
 
-ModelDescription::ModelDescription()
-  : numMarkers(0), markerNames(0)
+void MarkerSet::clear()
 {
+  markers.clear();
 }
 
-MarkerSet::MarkerSet() : 
-    numMarkers(0), 
-    markers(0) 
-{}
 
 ModelFrame::ModelFrame() : 
     latency(0.0)
 {
 }
 
+void ModelFrame::clear()
+{
+  markerSets.clear();
+  otherMarkers.clear();
+  rigidBodies.clear();
+}
+
+
 ServerInfo::ServerInfo() :
     natNetVersion(0,0,0,0),
     serverVersion(0,0,0,0)
 {
 
+}
+
+
+DataModel::DataModel() :
+  hasValidServerInfo(false)
+{
+
+}
+
+void DataModel::clear()
+{
+  dataFrame.clear();
+}
+
+void DataModel::setVersions(int* nver, int* sver)
+{
+  serverInfo.natNetVersion.setVersion(nver[0], nver[1], nver[2], nver[3]);
+  serverInfo.serverVersion.setVersion(sver[0], sver[1], sver[2], sver[3]);
+  hasValidServerInfo = true;
+}
+
+Version const& DataModel::getNatNetVersion() const
+{
+  return serverInfo.natNetVersion;
+}
+
+Version const& DataModel::getServerVersion() const
+{
+  return serverInfo.serverVersion;
 }
 
 }

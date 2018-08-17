@@ -1,5 +1,6 @@
 
 add_executable(${PROJECT_NAME}_mocap_node
+  data_conversions.cpp
   socket.cpp
   version.cpp
   mocap_node.cpp

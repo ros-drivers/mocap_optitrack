@@ -79,7 +79,7 @@ class PublishedRigidBody
 
   public:
   PublishedRigidBody(XmlRpc::XmlRpcValue &);
-  void publish(RigidBody &);
+  void publish(RigidBody const&);
 };
 
 typedef std::map<int, PublishedRigidBody> RigidBodyMap;

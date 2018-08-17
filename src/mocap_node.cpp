@@ -40,20 +40,6 @@ const char ** DEFAULT_MOCAP_MODEL = OBJECT;
 const int COMMAND_PORT = 1510;
 const int LOCAL_PORT = 9000;
 
-// NATNET message ids
-#define NAT_PING                    0
-#define NAT_PINGRESPONSE            1
-#define NAT_REQUEST                 2
-#define NAT_RESPONSE                3
-#define NAT_REQUEST_MODELDEF        4
-#define NAT_MODELDEF                5
-#define NAT_REQUEST_FRAMEOFDATA     6
-#define NAT_FRAMEOFDATA             7
-#define NAT_MESSAGESTRING           8
-#define NAT_UNRECOGNIZED_REQUEST    100
-#define UNDEFINED                   999999.9999
-#define MAX_PACKETSIZE              100000  // max size of packet (actual packet size is dynamic)
-#define MAX_NAMELENGTH              256
 
 namespace mocap_optitrack
 {
@@ -65,98 +51,52 @@ namespace mocap_optitrack
   {
     UdpMulticastSocket multicast_client_socket( LOCAL_PORT, multicast_ip );
 
-    unsigned short payload_len;
-    int numberOfPackets = 0;
-
-    natnet::ConnectionRequestMessage connectionRequestMsg;
-    char connectionRequestMsgBuffer[MAX_PACKETSIZE];
-    connectionRequestMsg.serialize(connectionRequestMsgBuffer);
-
     ROS_INFO("Start processMocapData");
-    mocap_optitrack::ServerInfo serverInfo;
-    bool haveServerInfo = false;
-
+    mocap_optitrack::DataModel dataModel;
+    natnet::MessageDispatcher msgDispatcher;
     while(ros::ok())
     {
-      int numBytes;
-
-      if (!haveServerInfo)
+      // Need verion information from the server to properly decode any of their packets.
+      // If we have not recieved that yet, send another request.
+      if (!dataModel.hasServerInfo())
       {
-        int ret = multicast_client_socket.send(connectionRequestMsgBuffer, connectionRequestMsg.length(), COMMAND_PORT);
+        natnet::ConnectionRequestMessage connectionRequestMsg;
+        natnet::MessageBuffer connectionRequestMsgBuffer;
+        connectionRequestMsg.serialize(connectionRequestMsgBuffer, NULL);
+        int ret = multicast_client_socket.send(&connectionRequestMsgBuffer[0], connectionRequestMsgBuffer.size(), COMMAND_PORT);
       }
 
-      do
+      // Receive data from mocap device
+      int numBytesReceived = multicast_client_socket.recv();
+
+      // Parse mocap data
+      if( numBytesReceived > 0 )
       {
-        // Receive data from mocap device
-        numBytes = multicast_client_socket.recv();
+        // Grab latest message buffer
+        const char* pMsgBuffer = multicast_client_socket.getBuffer();
 
-        // Parse mocap data
-        if( numBytes > 0 )
+        // Copy char* buffer into MessageBuffer and dispatch to be deserialized
+        natnet::MessageBuffer msgBuffer(pMsgBuffer, pMsgBuffer + numBytesReceived);
+        msgDispatcher.dispatch(msgBuffer, &dataModel);
+
+        // Maybe we got some data? Publish what we can to ROS
+        for (auto const& rigidBody : dataModel.dataFrame.rigidBodies)
         {
-          const char* msgBuffer = multicast_client_socket.getBuffer();
-          const natnet::Packet* packet = (natnet::Packet const*)(msgBuffer);
-          // ROS_DEBUG("Message ID: %d", packet->messageId);
-          // ROS_DEBUG("Byte count : %d", numBytes);
+          RigidBodyMap::iterator item = published_rigid_bodies.find(rigidBody.bodyId);
 
-          if (packet->messageId == natnet::MessageType::ModelDef ||
-              packet->messageId == natnet::MessageType::FrameOfData)
+          if (item != published_rigid_bodies.end())
           {
-            // if (haveVersion)
-            // {
-            //   parseMocapDataFrame(packet);
-            // }
-            // else
-            // {
-            //   ROS_WARN("Packet version not received from server. Parsing data message aborted.");
-            // }
-            continue;
-          }
-
-          if (packet->messageId == natnet::MessageType::ServerInfo)
-          {
-            natnet::ServerInfoMessage msg;
-            msg.unserialize(msgBuffer, serverInfo);
-            ROS_INFO_ONCE("NATNet Version : %s", 
-              serverInfo.natNetVersion.getVersionString().c_str());
-            ROS_INFO_ONCE("Server Version : %s", 
-              serverInfo.serverVersion.getVersionString().c_str());
-            haveServerInfo = true;
-            continue;
-          }
-
-          if (packet->messageId == natnet::MessageType::UnrecognizedRequest)
-          {
-            ROS_WARN("Received unrecognized request");
+            item->second.publish(rigidBody);
           }
         }
-      } while (numBytes > 0);
 
-      // NatNetParser natNetParser;
-      // bool packetread = false;
-
-      // if(!version) {
-      //   int iRet = multicast_client_socket.send((char*)&PacketOut, 4 + PacketOut.nDataBytes, COMMAND_PORT);
-      // }
-
-      // do
-      // {
-      //   // Receive data from mocap device
-      //   numBytes = multicast_client_socket.recv();
-
-      //   // Parse mocap data
-      //   if( numBytes > 0 )
-      //   {
-      //     const char* buffer = multicast_client_socket.getBuffer();
-          
-      //   }
-      // } while( numBytes > 0 );
-
-      // Don't try again immediately
-      // if( !packetread )
-      // {
+        // Clear out the model to prepare for the next frame of data
+        dataModel.clear();
+        
+        // If we processed some data, take a short break
         usleep( 10 );
-      // }
-    }
+      }
+    } // while ros::ok
   }
 }
 

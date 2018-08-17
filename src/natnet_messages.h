@@ -1,26 +1,46 @@
 #ifndef __MOCAP_OPTITRACK_NATNET_MESSAGES_H__
 #define __MOCAP_OPTITRACK_NATNET_MESSAGES_H__
 
+#include <vector>
 #include <mocap_optitrack/data_model.h>
 
 namespace natnet
 {
-    struct ConnectionRequestMessage
+    typedef std::vector<char> MessageBuffer;
+
+    struct MessageInterface
     {
-        size_t length();
-        void serialize(char* msgBuffer);
+        virtual void serialize(MessageBuffer&, mocap_optitrack::DataModel const*) {};
+        virtual void deserialize(MessageBuffer const&, mocap_optitrack::DataModel*) {};
     };
 
-    struct ServerInfoMessage
+    struct ConnectionRequestMessage : public MessageInterface
     {
-        void unserialize(const char* msgBuffer, 
-            mocap_optitrack::ServerInfo &serverInfo);
+        virtual void serialize(MessageBuffer& msgBuffer, mocap_optitrack::DataModel const*);
     };
 
-    // struct DataFrameMessage
-    // {
-    //     void unserialize(const char* msgBuffer, mocap_optitrack::ModelFrame& modelFrame);
-    // };
+    struct ServerInfoMessage : public MessageInterface
+    {
+        virtual void deserialize(MessageBuffer const&, mocap_optitrack::DataModel*);
+    };
+
+    class DataFrameMessage : public MessageInterface
+    {
+        struct RigidBodyMessagePart
+        {
+            void deserialize(MessageBuffer::const_iterator&, 
+                mocap_optitrack::RigidBody&,
+                mocap_optitrack::Version const&);
+        };
+
+    public:
+        virtual void deserialize(MessageBuffer const&, mocap_optitrack::DataModel*);
+    };
+
+    struct MessageDispatcher
+    {
+        void dispatch(MessageBuffer const&, mocap_optitrack::DataModel*);
+    };
 }
 
 #endif

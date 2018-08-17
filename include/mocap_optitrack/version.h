@@ -16,12 +16,12 @@ class Version
     ~Version();
 
     void setVersion(int major, int minor, int revision, int build);
-    const std::string& getVersionString();
-    bool operator > (const Version& comparison);
-    bool operator >= (const Version& comparison);
-    bool operator < (const Version& comparison);
-    bool operator <= (const Version& comparison);
-    bool operator == (const Version& comparison);
+    std::string const& getVersionString() const;
+    bool operator > (const Version& comparison) const;
+    bool operator >= (const Version& comparison) const;
+    bool operator < (const Version& comparison) const;
+    bool operator <= (const Version& comparison) const;
+    bool operator == (const Version& comparison) const;
 
     int v_major;
     int v_minor;

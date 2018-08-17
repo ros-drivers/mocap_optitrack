@@ -4,20 +4,18 @@
 #include <string>
 #include <vector>
 
-#include <geometry_msgs/PoseStamped.h>
-
 #include <mocap_optitrack/version.h>
-
 
 namespace mocap_optitrack
 {
 
+
 /// \brief Data object holding the position of a single mocap marker in 3d space
 struct Marker
 {
-  float positionX;
-  float positionY;
-  float positionZ;
+  float x;
+  float y;
+  float z;
 };
 
 struct __attribute__ ((__packed__)) Pose
@@ -44,24 +42,24 @@ struct RigidBody
     float meanMarkerError;
     bool isTrackingValid;
 
-    const geometry_msgs::PoseStamped getRosPose(bool newCoordinates);
-    bool hasData();
+    bool hasValidData() const;
 };
 
 /// \brief Data object describing a single tracked model
 struct ModelDescription
 {
     ModelDescription();
+    void clear();
+
     std::string name;
-    int numMarkers;
     std::vector<std::string> markerNames;
 };
 
 struct MarkerSet
 {
-    MarkerSet();
+    void clear();
+
     char name[256];
-    int numMarkers;
     std::vector<Marker> markers;
 };
 
@@ -69,6 +67,8 @@ struct MarkerSet
 struct ModelFrame
 {
     ModelFrame();
+    void clear();
+
     std::vector<MarkerSet> markerSets;
     std::vector<Marker> otherMarkers;
     std::vector<RigidBody> rigidBodies;
@@ -82,6 +82,26 @@ struct ServerInfo
     ServerInfo();
     Version natNetVersion;
     Version serverVersion;
+};
+
+class DataModel
+{
+public:
+    DataModel();
+
+    int frameNumber;
+    ModelFrame dataFrame;
+
+    void clear();
+
+    void setVersions(int* nver, int* sver);
+    Version const& getNatNetVersion() const;
+    Version const& getServerVersion() const;
+    bool hasServerInfo() const {return hasValidServerInfo;};
+
+private:
+    ServerInfo serverInfo;
+    bool hasValidServerInfo;
 };
 
 }
