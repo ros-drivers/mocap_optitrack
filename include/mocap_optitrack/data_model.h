@@ -84,6 +84,7 @@ struct ServerInfo
     Version serverVersion;
 };
 
+/// \brief The data model for this node
 class DataModel
 {
 public:

@@ -44,47 +44,57 @@
  *
  */
 
-#ifndef __MOCAP_CONFIG_H__
-#define __MOCAP_CONFIG_H__
+#ifndef __MOCAP_OPTITRACK_MOCAP_CONFIG_H__
+#define __MOCAP_OPTITRACK_MOCAP_CONFIG_H__
+
+#include <vector>
+#include <string>
 
 #include <ros/ros.h>
-#include <tf/transform_broadcaster.h>
-// #include "mocap_datapackets.h"
-#include "data_model.h"
 
 namespace mocap_optitrack
 {
 
-class PublishedRigidBody
+/// \brief Server communication info
+struct ServerDescription
 {
-  private:
-  ros::NodeHandle n;
+  struct Default
+  {
+    static const int CommandPort;
+    static const int DataPort;
+    static const std::string MulticastIpAddress;
+  };
 
-  std::string pose_topic;
-  std::string pose2d_topic;
-  std::string parent_frame_id;
-  std::string child_frame_id;
-
-
-  bool publish_pose;
-  bool publish_tf;
-  bool publish_pose2d;
-  bool use_new_coordinates;
-
-  tf::TransformBroadcaster tf_pub;
-  ros::Publisher pose_pub;
-  ros::Publisher pose2d_pub;
-
-  bool validateParam(XmlRpc::XmlRpcValue &, const std::string &);
-
-  public:
-  PublishedRigidBody(XmlRpc::XmlRpcValue &);
-  void publish(RigidBody const&);
+  ServerDescription();
+  int commandPort;
+  int dataPort;
+  std::string multicastIpAddress;
 };
 
-typedef std::map<int, PublishedRigidBody> RigidBodyMap;
-typedef std::pair<int, PublishedRigidBody> RigidBodyItem;
+/// \brief ROS publisher configuration
+struct PublisherConfiguration
+{
+  int rigidBodyId;
+  std::string poseTopicName;
+  std::string pose2dTopicName;
+  std::string childFrameId;
+  std::string parentFrameId;
 
-}
+  bool publishPose;
+  bool publishPose2d;
+  bool publishTf;
+};
 
-#endif  // __MOCAP_CONFIG_H__
+typedef std::vector<PublisherConfiguration> PublisherConfigurations;
+
+/// \brief Handles loading node configuration from different sources
+struct NodeConfiguration
+{
+  static void fromRosParam(ros::NodeHandle& nh, 
+    ServerDescription& serverDescription, 
+    PublisherConfigurations& pubConfigs);
+};
+
+} // namespace
+
+#endif  // __MOCAP_OPTITRACK_MOCAP_CONFIG_H__

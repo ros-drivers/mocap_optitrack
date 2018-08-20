@@ -11,3 +11,5 @@ rigid_bodies:
         use_new_coordinates: false
 optitrack_config:
         multicast_address: 224.0.0.1
+        command_port: 1510
+        data_port: 9000

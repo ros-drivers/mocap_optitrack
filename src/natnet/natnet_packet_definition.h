@@ -1,8 +1,8 @@
-#ifndef __NAT_SDK_PACKET_DEFINITION_H__
-#define __NAT_SDK_PACKET_DEFINITION_H__
+#ifndef __MOCAP_OPTITRACK_NATNET_PACKET_DEFINITION_H__
+#define __MOCAP_OPTITRACK_NATNET_PACKET_DEFINITION_H__
 
-#define MAX_NAMELENGTH              256
-#define MAX_PACKETSIZE              100000  // max size of packet (actual packet size is dynamic)
+#define NATNET_MAX_NAMELENGTH   256
+#define NATNET_MAX_PACKETSIZE   100000  // max size of packet (actual packet size is dynamic)
 
 namespace natnet
 {
@@ -24,7 +24,7 @@ namespace natnet
   // Sender definition
   typedef struct 
   {
-    char name[MAX_NAMELENGTH];            // sending app's name
+    char name[NATNET_MAX_NAMELENGTH];            // sending app's name
     unsigned char version[4];             // sending app's version [major.minor.build.revision]
     unsigned char natNetVersion[4];       // sending app's NatNet version [major.minor.build.revision]
   } __attribute__ ((__packed__)) Sender;
@@ -36,10 +36,10 @@ namespace natnet
     unsigned short numDataBytes;            // Num bytes in payload
     union
     {
-      unsigned char  cData[MAX_PACKETSIZE];
-      char           szData[MAX_PACKETSIZE];
-      unsigned long  lData[MAX_PACKETSIZE/4];
-      float          fData[MAX_PACKETSIZE/4];
+      unsigned char  cData[NATNET_MAX_PACKETSIZE];
+      char           szData[NATNET_MAX_PACKETSIZE];
+      unsigned long  lData[NATNET_MAX_PACKETSIZE/4];
+      float          fData[NATNET_MAX_PACKETSIZE/4];
       Sender         sender;
     } data;                                 // Payload incoming from NatNet Server
   } __attribute__ ((__packed__)) Packet;

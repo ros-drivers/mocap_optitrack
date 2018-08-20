@@ -12,23 +12,6 @@ namespace natnet
 
 namespace utilities
 {
-  // template<typename T>
-  // struct TypeParseTraits {};
-
-  // #define REGISTER_PARSE_TYPE(X)                    \
-  // template <>                                       \
-  // struct TypeParseTraits<X>                         \
-  // {                                                 \
-  //   static const char* name;                        \
-  // };                                                \
-  // const char* TypeParseTraits<X>::name = #X;
-
-  // REGISTER_PARSE_TYPE(int);
-  // REGISTER_PARSE_TYPE(double);
-  // REGISTER_PARSE_TYPE(float);
-  // REGISTER_PARSE_TYPE(short);
-  // REGISTER_PARSE_TYPE(Pose);
-
   void seek(MessageBuffer::const_iterator& iter, size_t offset)
   {
     iter += offset;

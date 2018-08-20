@@ -1,14 +1,15 @@
 
 add_executable(${PROJECT_NAME}_mocap_node
-  data_conversions.cpp
+  natnet/natnet_packet_definition.cpp
+  natnet/natnet_messages.cpp
   socket.cpp
   version.cpp
   mocap_node.cpp
   mocap_config.cpp
   data_model.cpp
-  natnet_packet_definition.cpp
-  natnet_messages.cpp
+  rigid_body_publisher.cpp
 )
+
 target_link_libraries(${PROJECT_NAME}_mocap_node ${catkin_LIBRARIES})
 set_target_properties(${PROJECT_NAME}_mocap_node PROPERTIES
                       OUTPUT_NAME mocap_node PREFIX "")

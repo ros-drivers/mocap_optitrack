@@ -39,7 +39,7 @@ namespace natnet
 
     struct MessageDispatcher
     {
-        void dispatch(MessageBuffer const&, mocap_optitrack::DataModel*);
+        static void dispatch(MessageBuffer const&, mocap_optitrack::DataModel*);
     };
 }
 
