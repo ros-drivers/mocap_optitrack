@@ -50,8 +50,6 @@ RigidBodyPublisher::RigidBodyPublisher(ros::NodeHandle &nh,
   if (config.publishPose2d)
     pose2dPublisher = nh.advertise<geometry_msgs::Pose2D>(config.pose2dTopicName, 1000);
 
-  if (config.publishTf)
-
   // Motive 1.7+ uses a new coordinate system
   useNewCoordinates = (natNetVersion >= Version("1.7"));
 }
