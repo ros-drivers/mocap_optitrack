@@ -1,12 +1,32 @@
-/*
- * Socket.cpp
+/* 
+ * Copyright (c) 2011 University of Bonn, Computer Science Institute, 
+ * Kathrin Gräve
+ * All rights reserved.
  *
- *  Created on: 14.11.2008
- *      Author:
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ *    notice, this list of conditions and the following disclaimer in the 
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holder nor the names of its 
+ *    contributors may be used to endorse or promote products derived from 
+ *    this software without specific prior written permission. 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * POSSIBILITY OF SUCH DAMAGE.
  */
-
-// Implementation of the Socket class.
-
 #include "mocap_optitrack/socket.h"
 #include <cstring>
 #include <cerrno>
@@ -19,6 +39,8 @@
 
 UdpMulticastSocket::UdpMulticastSocket( const int local_port, const std::string multicast_ip ) 
 {
+  remote_ip_exist = false;
+
   // Create a UDP socket
   ROS_INFO( "Creating socket..." );
   m_socket = socket( AF_INET, SOCK_DGRAM, 0 );
@@ -36,23 +58,23 @@ UdpMulticastSocket::UdpMulticastSocket( const int local_port, const std::string 
     switch( errno )
     {
       case EBADF:
-  error << "EBADF";
-  break;
+        error << "EBADF";
+        break;
       case EFAULT:
-  error << "EFAULT";
-  break;
+        error << "EFAULT";
+        break;
       case EINVAL:
-  error << "EINVAL";
-  break;
+        error << "EINVAL";
+        break;
       case ENOPROTOOPT:
-  error << "ENOPROTOOPT";
-  break;
+        error << "ENOPROTOOPT";
+        break;
       case ENOTSOCK:
-  error << "ENOTSOCK";
-  break;
+        error << "ENOTSOCK";
+        break;
       default:
-  error << "unknown error";
-  break;
+        error << "unknown error";
+        break;
     }
     throw SocketException( error.str().c_str() );    
   }
@@ -88,23 +110,23 @@ UdpMulticastSocket::UdpMulticastSocket( const int local_port, const std::string 
     switch( errno )
     {
       case EBADF:
-  error << "EBADF";
-  break;
+        error << "EBADF";
+        break;
       case EFAULT:
-  error << "EFAULT";
-  break;
+        error << "EFAULT";
+        break;
       case EINVAL:
-  error << "EINVAL";
-  break;
+        error << "EINVAL";
+        break;
       case ENOPROTOOPT:
-  error << "ENOPROTOOPT";
-  break;
+        error << "ENOPROTOOPT";
+        break;
       case ENOTSOCK:
-  error << "ENOTSOCK";
-  break;
+        error << "ENOTSOCK";
+        break;
       default:
-  error << "unknown error";
-  break;
+        error << "unknown error";
+        break;
     }
     throw SocketException( error.str().c_str() );    
   }
@@ -143,7 +165,17 @@ int UdpMulticastSocket::recv()
   if( status > 0 )
     ROS_DEBUG( "%4i bytes received from %s:%i", status, inet_ntoa( remote_addr.sin_addr ), ntohs( remote_addr.sin_port ) );
   else if( status == 0 )
-    ROS_INFO( "Connection closed by peer" );
+    ROS_DEBUG( "Connection closed by peer" );
+
+  HostAddr.sin_addr =remote_addr.sin_addr;
+  remote_ip_exist = true;
 
   return status;
+}
+
+int UdpMulticastSocket::send(const char* buf, unsigned int sz, int port)
+{
+  HostAddr.sin_family = AF_INET;
+  HostAddr.sin_port = htons(port);
+  return sendto(m_socket, buf, sz, 0, (sockaddr*)&HostAddr, sizeof(HostAddr));
 }

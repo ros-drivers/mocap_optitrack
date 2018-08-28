@@ -1,6 +1,5 @@
 /* 
- * Copyright (c) 2018, Houston Mechatronics Inc., JD Yamokoski
- * Copyright (c) 2012, Clearpath Robotics, Inc., Alex Bencz
+ * Copyright (c) 2016, Tony Baltovski
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -27,57 +26,38 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __MOCAP_OPTITRACK_MOCAP_CONFIG_H__
-#define __MOCAP_OPTITRACK_MOCAP_CONFIG_H__
+#ifndef __MOCAP_OPTITRACK_VERSION_H__
+#define __MOCAP_OPTITRACK_VERSION_H__
 
-#include <vector>
 #include <string>
-
-#include <ros/ros.h>
 
 namespace mocap_optitrack
 {
 
-/// \brief Server communication info
-struct ServerDescription
+/// \breif Version class containing the version information and helpers for comparison.
+class Version
 {
-  struct Default
-  {
-    static const int CommandPort;
-    static const int DataPort;
-    static const std::string MulticastIpAddress;
-  };
+  public:
+    Version();
+    Version(int major, int minor, int revision, int build);
+    Version(const std::string& version);
+    ~Version();
 
-  ServerDescription();
-  int commandPort;
-  int dataPort;
-  std::string multicastIpAddress;
+    void setVersion(int major, int minor, int revision, int build);
+    std::string const& getVersionString() const;
+    bool operator > (const Version& comparison) const;
+    bool operator >= (const Version& comparison) const;
+    bool operator < (const Version& comparison) const;
+    bool operator <= (const Version& comparison) const;
+    bool operator == (const Version& comparison) const;
+
+    int v_major;
+    int v_minor;
+    int v_revision;
+    int v_build;
+    std::string v_string;
 };
 
-/// \brief ROS publisher configuration
-struct PublisherConfiguration
-{
-  int rigidBodyId;
-  std::string poseTopicName;
-  std::string pose2dTopicName;
-  std::string childFrameId;
-  std::string parentFrameId;
+}
 
-  bool publishPose;
-  bool publishPose2d;
-  bool publishTf;
-};
-
-typedef std::vector<PublisherConfiguration> PublisherConfigurations;
-
-/// \brief Handles loading node configuration from different sources
-struct NodeConfiguration
-{
-  static void fromRosParam(ros::NodeHandle& nh, 
-    ServerDescription& serverDescription, 
-    PublisherConfigurations& pubConfigs);
-};
-
-} // namespace
-
-#endif  // __MOCAP_OPTITRACK_MOCAP_CONFIG_H__
+#endif

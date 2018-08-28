@@ -1,156 +1,209 @@
-/*
- *      _____
- *     /  _  \
- *    / _/ \  \
- *   / / \_/   \
- *  /  \_/  _   \  ___  _    ___   ___   ____   ____   ___   _____  _   _
- *  \  / \_/ \  / /  _\| |  | __| / _ \ | ++ \ | ++ \ / _ \ |_   _|| | | |
- *   \ \_/ \_/ /  | |  | |  | ++ | |_| || ++ / | ++_/| |_| |  | |  | +-+ |
- *    \  \_/  /   | |_ | |_ | ++ |  _  || |\ \ | |   |  _  |  | |  | +-+ |
- *     \_____/    \___/|___||___||_| |_||_| \_\|_|   |_| |_|  |_|  |_| |_|
- *             ROBOTICS™ 
+/* 
+ * Copyright (c) 2018, Houston Mechatronics Inc., JD Yamokoski
+ * Copyright (c) 2012, Clearpath Robotics, Inc., Alex Bencz
+ * All rights reserved.
  *
- *  File: mocap_config.cpp
- *  Desc: Classes representing ROS configuration for mocap_optitrack node. Data
- *  will be published to differed topics based on the configuration provided.
- *  Auth: Alex Bencz
- *
- *  Copyright (c) 2012, Clearpath Robotics, Inc. 
- *  All Rights Reserved
- * 
- * Redistribution and use in source and binary forms, with or without
+ * Redistribution and use in source and binary forms, with or without 
  * modification, are permitted provided that the following conditions are met:
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of Clearpath Robotics, Inc. nor the
- *       names of its contributors may be used to endorse or promote products
- *       derived from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL CLEARPATH ROBOTICS, INC. BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * Please send comments, questions, or patches to skynet@clearpathrobotics.com 
  *
+ * 1. Redistributions of source code must retain the above copyright notice, 
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ *    notice, this list of conditions and the following disclaimer in the 
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holder nor the names of its 
+ *    contributors may be used to endorse or promote products derived from 
+ *    this software without specific prior written permission. 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * POSSIBILITY OF SUCH DAMAGE.
  */
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Pose2D.h>
-#include <tf/transform_datatypes.h>
 #include "mocap_optitrack/mocap_config.h"
 
-const std::string POSE_TOPIC_PARAM_NAME = "pose";
-const std::string POSE2D_TOPIC_PARAM_NAME = "pose2d";
-const std::string CHILD_FRAME_ID_PARAM_NAME = "child_frame_id";
-const std::string PARENT_FRAME_ID_PARAM_NAME = "parent_frame_id";
+#include <XmlRpcValue.h>
 
-PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node)
+namespace mocap_optitrack
 {
-  // load configuration for this rigid body from ROS
-  publish_pose = validateParam(config_node, POSE_TOPIC_PARAM_NAME);
-  publish_pose2d = validateParam(config_node, POSE2D_TOPIC_PARAM_NAME);
-  // only publish tf if a frame ID is provided
-  publish_tf = (validateParam(config_node, CHILD_FRAME_ID_PARAM_NAME) && 
-               validateParam(config_node, PARENT_FRAME_ID_PARAM_NAME));
 
-  if (publish_pose)
-  {
-    pose_topic = (std::string&) config_node[POSE_TOPIC_PARAM_NAME];
-    pose_pub = n.advertise<geometry_msgs::PoseStamped>(pose_topic, 1000);
-  }
-
-  if (publish_pose2d)
-  {
-    pose2d_topic = (std::string&) config_node[POSE2D_TOPIC_PARAM_NAME];
-    pose2d_pub = n.advertise<geometry_msgs::Pose2D>(pose2d_topic, 1000);
-  }
-
-  if (publish_tf)
-  {
-    child_frame_id = (std::string&) config_node[CHILD_FRAME_ID_PARAM_NAME];
-    parent_frame_id = (std::string&) config_node[PARENT_FRAME_ID_PARAM_NAME];
-  }
-}
-
-void PublishedRigidBody::publish(RigidBody &body)
+namespace impl
 {
-  // don't do anything if no new data was provided
-  if (!body.has_data())
-  {
-    return;
-  }
-  // NaN?
-  if (body.pose.position.x != body.pose.position.x)
-  {
-    return;
-  }
-
-  // TODO Below was const, see if there a way to keep it like that.
-  geometry_msgs::PoseStamped pose = body.get_ros_pose();
-
-  if (publish_pose)
-  {
-    pose.header.frame_id = parent_frame_id;
-    pose_pub.publish(pose);
-  }
-
-  if (!publish_pose2d && !publish_tf)
-  {
-    // nothing to do, bail early
-    return;
-  }
-
-  tf::Quaternion q(pose.pose.orientation.x,
-                   pose.pose.orientation.y,
-                   pose.pose.orientation.z,
-                   pose.pose.orientation.w);
-
-  // publish 2D pose
-  if (publish_pose2d)
-  {
-    geometry_msgs::Pose2D pose2d;
-    pose2d.x = pose.pose.position.x;
-    pose2d.y = pose.pose.position.y;
-    pose2d.theta = tf::getYaw(q);
-    pose2d_pub.publish(pose2d);
-  }
-
-  if (publish_tf)
-  {
-    // publish transform
-    tf::Transform transform;
-    transform.setOrigin( tf::Vector3(pose.pose.position.x,
-                                     pose.pose.position.y,
-                                     pose.pose.position.z));
-
-    // Handle different coordinate systems (Arena vs. rviz)
-    transform.setRotation(q);
-    ros::Time timestamp(ros::Time::now());
-    tf_pub.sendTransform(tf::StampedTransform(transform, timestamp, parent_frame_id, child_frame_id));
-  }
-}
-
-bool PublishedRigidBody::validateParam(XmlRpc::XmlRpcValue &config_node, const std::string &name)
-{
-  if (!config_node.hasMember(name))
+  template<typename T>
+  bool check_and_get_param(
+    XmlRpc::XmlRpcValue& config_node, 
+    std::string const& key, 
+    T& value)
   {
     return false;
   }
 
-  if (config_node[name].getType() != XmlRpc::XmlRpcValue::TypeString)
+  template<>
+  bool check_and_get_param<std::string>(
+    XmlRpc::XmlRpcValue& config_node, 
+    std::string const& key, 
+    std::string& value)
   {
+    if (config_node[key].getType() == XmlRpc::XmlRpcValue::TypeString)
+    {
+      value = (std::string&)config_node[key];
+      return true;
+    }
+
     return false;
   }
+} // namespace impl
 
-  return true;
+// Server description defaults
+const int ServerDescription::Default::CommandPort = 1510;
+const int ServerDescription::Default::DataPort   = 9000;
+const std::string ServerDescription::Default::MulticastIpAddress = "224.0.0.1";
+
+// Param keys
+namespace rosparam
+{
+  namespace keys
+  {
+    const std::string MulticastIpAddress = "optitrack_config/multicast_address";
+    const std::string CommandPort = "optitrack_config/command_port";
+    const std::string DataPort = "optitrack_config/data_port";
+    const std::string RigidBodies = "rigid_bodies";
+    const std::string PoseTopicName = "pose";
+    const std::string Pose2dTopicName = "pose2d";
+    const std::string ChildFrameId = "child_frame_id";
+    const std::string ParentFrameId = "parent_frame_id";
+  }
 }
 
+ServerDescription::ServerDescription() :
+  commandPort(ServerDescription::Default::CommandPort),
+  dataPort(ServerDescription::Default::DataPort),
+  multicastIpAddress(ServerDescription::Default::MulticastIpAddress)
+{}
+
+void NodeConfiguration::fromRosParam(
+  ros::NodeHandle& nh,
+  ServerDescription& serverDescription, 
+  PublisherConfigurations& pubConfigs)
+{
+  // Get server cconfiguration from ROS parameter server
+  if (nh.hasParam(rosparam::keys::MulticastIpAddress) )
+  {
+    nh.getParam(rosparam::keys::MulticastIpAddress, serverDescription.multicastIpAddress);
+  }
+  else 
+  {
+    ROS_WARN_STREAM("Could not get multicast address, using default: " << 
+      serverDescription.multicastIpAddress);
+  }
+
+  if (nh.hasParam(rosparam::keys::CommandPort) )
+  {
+    nh.getParam(rosparam::keys::CommandPort, serverDescription.commandPort);
+  }
+  else 
+  {
+    ROS_WARN_STREAM("Could not get command port, using default: " << 
+      serverDescription.commandPort);
+  }
+
+  if (nh.hasParam(rosparam::keys::DataPort) )
+  {
+    nh.getParam(rosparam::keys::DataPort, serverDescription.dataPort);
+  }
+  else 
+  {
+    ROS_WARN_STREAM("Could not get data port, using default: " << 
+      serverDescription.dataPort);
+  }
+
+  // Parse rigid bodies section
+  if (nh.hasParam(rosparam::keys::RigidBodies))
+  {
+    XmlRpc::XmlRpcValue bodyList;
+    nh.getParam(rosparam::keys::RigidBodies, bodyList);
+
+    if (bodyList.getType() == XmlRpc::XmlRpcValue::TypeStruct && bodyList.size() > 0)
+    {
+      XmlRpc::XmlRpcValue::iterator iter;
+      //for (iter = bodyList.begin(); iter != bodyList.end(); ++iter) {
+      for (auto const& iter : bodyList)
+      {
+        std::string strBodyId = iter.first;
+        XmlRpc::XmlRpcValue bodyParameters = iter.second;
+
+        if (bodyParameters.getType() == XmlRpc::XmlRpcValue::TypeStruct) 
+        {
+          // Load configuration for this rigid body from ROS
+          PublisherConfiguration publisherConfig;
+          std::sscanf(strBodyId.c_str(), "%d", &publisherConfig.rigidBodyId);
+          
+          bool readPoseTopicName = impl::check_and_get_param(bodyParameters, 
+            rosparam::keys::PoseTopicName, publisherConfig.poseTopicName);
+
+          if (!readPoseTopicName)
+          {
+            ROS_WARN_STREAM("Failed to parse " << rosparam::keys::PoseTopicName << 
+              " for body `" << publisherConfig.rigidBodyId << "`. Pose publishing disabled.");
+            publisherConfig.publishPose = false;
+          }
+          else
+          {
+            publisherConfig.publishPose = true;
+          }
+
+          bool readPose2dTopicName = impl::check_and_get_param(bodyParameters, 
+            rosparam::keys::Pose2dTopicName, publisherConfig.pose2dTopicName);
+
+          if (!readPose2dTopicName)
+          {
+            ROS_WARN_STREAM("Failed to parse " << rosparam::keys::Pose2dTopicName << 
+              " for body `" << publisherConfig.rigidBodyId << "`. Pose publishing disabled.");
+            publisherConfig.publishPose2d = false;
+          }
+          else
+          {
+            publisherConfig.publishPose2d = true;
+          }
+
+          bool readChildFrameId = impl::check_and_get_param(bodyParameters,
+            rosparam::keys::ChildFrameId, publisherConfig.childFrameId);
+
+          bool readParentFrameId = impl::check_and_get_param(bodyParameters,
+            rosparam::keys::ParentFrameId, publisherConfig.parentFrameId);          
+
+          if (!readChildFrameId || !readParentFrameId)
+          {
+            if (!readChildFrameId)
+              ROS_WARN_STREAM("Failed to parse " << rosparam::keys::ChildFrameId << 
+                " for body `" << publisherConfig.rigidBodyId << "`. TF publishing disabled.");
+
+            if (!readParentFrameId)
+              ROS_WARN_STREAM("Failed to parse " << rosparam::keys::ParentFrameId << 
+                " for body `" << publisherConfig.rigidBodyId << "`. TF publishing disabled.");
+
+            publisherConfig.publishTf = false;
+          }
+          else
+          {
+            publisherConfig.publishTf = true;
+          }
+
+          pubConfigs.push_back(publisherConfig);
+        }
+      }
+    }
+  }
+}
+
+
+
+
+}

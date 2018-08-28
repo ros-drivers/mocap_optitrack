@@ -27,57 +27,56 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __MOCAP_OPTITRACK_MOCAP_CONFIG_H__
-#define __MOCAP_OPTITRACK_MOCAP_CONFIG_H__
+#ifndef __MOCAP_OPTITRACK_RIGID_BODY_PUBLISHER_H__
+#define __MOCAP_OPTITRACK_RIGID_BODY_PUBLISHER_H__
 
-#include <vector>
-#include <string>
+#include <map>
+#include <memory>
 
 #include <ros/ros.h>
+#include <tf/transform_broadcaster.h>
+
+#include <mocap_optitrack/version.h>
+#include <mocap_optitrack/data_model.h>
+#include <mocap_optitrack/mocap_config.h>
 
 namespace mocap_optitrack
 {
 
-/// \brief Server communication info
-struct ServerDescription
+/// \brief Encapsulation of a RigidBody data publisher.
+class RigidBodyPublisher
 {
-  struct Default
-  {
-    static const int CommandPort;
-    static const int DataPort;
-    static const std::string MulticastIpAddress;
-  };
+public:
+  RigidBodyPublisher(ros::NodeHandle &nh, 
+    Version const& natNetVersion, 
+    PublisherConfiguration const& config);
+  ~RigidBodyPublisher();
+  void publish(ros::Time const& time, RigidBody const&);
 
-  ServerDescription();
-  int commandPort;
-  int dataPort;
-  std::string multicastIpAddress;
+private:
+  PublisherConfiguration config;
+
+  bool useNewCoordinates;
+
+  tf::TransformBroadcaster tfPublisher;
+  ros::Publisher posePublisher;
+  ros::Publisher pose2dPublisher;
 };
 
-/// \brief ROS publisher configuration
-struct PublisherConfiguration
+/// \brief Dispatches RigidBody data to the correct publisher.
+class RigidBodyPublishDispatcher
 {
-  int rigidBodyId;
-  std::string poseTopicName;
-  std::string pose2dTopicName;
-  std::string childFrameId;
-  std::string parentFrameId;
+    typedef std::shared_ptr<RigidBodyPublisher> RigidBodyPublisherPtr;
+    typedef std::map<int,RigidBodyPublisherPtr> RigidBodyPublisherMap;
+    RigidBodyPublisherMap rigidBodyPublisherMap;
 
-  bool publishPose;
-  bool publishPose2d;
-  bool publishTf;
-};
-
-typedef std::vector<PublisherConfiguration> PublisherConfigurations;
-
-/// \brief Handles loading node configuration from different sources
-struct NodeConfiguration
-{
-  static void fromRosParam(ros::NodeHandle& nh, 
-    ServerDescription& serverDescription, 
-    PublisherConfigurations& pubConfigs);
+public:
+    RigidBodyPublishDispatcher(ros::NodeHandle &nh, 
+        Version const& natNetVersion, 
+        PublisherConfigurations const& configs);
+    void publish(ros::Time const& time, std::vector<RigidBody> const&);
 };
 
 } // namespace
 
-#endif  // __MOCAP_OPTITRACK_MOCAP_CONFIG_H__
+#endif

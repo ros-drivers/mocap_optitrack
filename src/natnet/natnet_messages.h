@@ -1,6 +1,5 @@
 /* 
  * Copyright (c) 2018, Houston Mechatronics Inc., JD Yamokoski
- * Copyright (c) 2012, Clearpath Robotics, Inc., Alex Bencz
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
@@ -27,57 +26,49 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __MOCAP_OPTITRACK_MOCAP_CONFIG_H__
-#define __MOCAP_OPTITRACK_MOCAP_CONFIG_H__
+#ifndef __MOCAP_OPTITRACK_NATNET_MESSAGES_H__
+#define __MOCAP_OPTITRACK_NATNET_MESSAGES_H__
 
 #include <vector>
-#include <string>
+#include <mocap_optitrack/data_model.h>
 
-#include <ros/ros.h>
-
-namespace mocap_optitrack
+namespace natnet
 {
+    typedef std::vector<char> MessageBuffer;
 
-/// \brief Server communication info
-struct ServerDescription
-{
-  struct Default
-  {
-    static const int CommandPort;
-    static const int DataPort;
-    static const std::string MulticastIpAddress;
-  };
+    struct MessageInterface
+    {
+        virtual void serialize(MessageBuffer&, mocap_optitrack::DataModel const*) {};
+        virtual void deserialize(MessageBuffer const&, mocap_optitrack::DataModel*) {};
+    };
 
-  ServerDescription();
-  int commandPort;
-  int dataPort;
-  std::string multicastIpAddress;
-};
+    struct ConnectionRequestMessage : public MessageInterface
+    {
+        virtual void serialize(MessageBuffer& msgBuffer, mocap_optitrack::DataModel const*);
+    };
 
-/// \brief ROS publisher configuration
-struct PublisherConfiguration
-{
-  int rigidBodyId;
-  std::string poseTopicName;
-  std::string pose2dTopicName;
-  std::string childFrameId;
-  std::string parentFrameId;
+    struct ServerInfoMessage : public MessageInterface
+    {
+        virtual void deserialize(MessageBuffer const&, mocap_optitrack::DataModel*);
+    };
 
-  bool publishPose;
-  bool publishPose2d;
-  bool publishTf;
-};
+    class DataFrameMessage : public MessageInterface
+    {
+        struct RigidBodyMessagePart
+        {
+            void deserialize(MessageBuffer::const_iterator&, 
+                mocap_optitrack::RigidBody&,
+                mocap_optitrack::Version const&);
+        };
 
-typedef std::vector<PublisherConfiguration> PublisherConfigurations;
+    public:
+        virtual void deserialize(MessageBuffer const&, mocap_optitrack::DataModel*);
+    };
 
-/// \brief Handles loading node configuration from different sources
-struct NodeConfiguration
-{
-  static void fromRosParam(ros::NodeHandle& nh, 
-    ServerDescription& serverDescription, 
-    PublisherConfigurations& pubConfigs);
-};
+    struct MessageDispatcher
+    {
+        static void dispatch(MessageBuffer const&, mocap_optitrack::DataModel*);
+    };
+}
 
-} // namespace
-
-#endif  // __MOCAP_OPTITRACK_MOCAP_CONFIG_H__
+#endif

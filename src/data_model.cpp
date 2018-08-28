@@ -27,64 +27,80 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __MOCAP_OPTITRACK_SOCKET_H__
-#define __MOCAP_OPTITRACK_SOCKET_H__
+#include "mocap_optitrack/data_model.h"
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <string>
-#include <arpa/inet.h>
-#include <stdexcept>
-
-/// \brief Exception class thrown by socket classes in this file.
-class SocketException : public std::runtime_error
+namespace mocap_optitrack
 {
-  public:
-   
-    /// \brief Constructor
-    /// \param description Error message
-    SocketException ( std::string description ) : std::runtime_error( description ) {}
-    
-    ~SocketException () throw() {}
-};
 
-/// \brief Allows to retrieve data from a UDP multicast group
-class UdpMulticastSocket
+RigidBody::RigidBody() : 
+  isTrackingValid(false)
 {
-  public:
-    
-    /// \brief Maximum number of bytse that can be read at a time
-    static const int MAXRECV = 3000;
+}
 
-    /// Creates a socket and joins the multicast group with the given address
-    UdpMulticastSocket( const int local_port, const std::string multicast_ip = "224.0.0.1" );
-    
-    ///
-    ~UdpMulticastSocket();
-    
-    /// \brief Retrieve data from multicast group.
-    /// \return The number of bytes received or -1 if no data is available
-    ///
-    /// This call is non-blocking.
-    int recv();
+bool RigidBody::hasValidData() const
+{
+    return isTrackingValid;
+}
 
-    /// \brief Returns a pointer to the internal buffer, holding the received data.
-    ///
-    /// The buffer size may be obtained from MAXRECV.
-    const char* getBuffer() { return &buf[0]; }
 
-    int send(const char* buf, unsigned int sz, int port);
+void ModelDescription::clear()
+{
+  markerNames.clear();
+}
 
-  private:
+void MarkerSet::clear()
+{
+  markers.clear();
+}
 
-    int m_socket;
-    sockaddr_in m_local_addr;
-    sockaddr_in HostAddr;
-    bool remote_ip_exist;
-    char buf [ MAXRECV + 1 ];
-};
 
-#endif /*__MOCAP_OPTITRACK_SOCKET_H__*/
+ModelFrame::ModelFrame() : 
+    latency(0.0)
+{
+}
+
+void ModelFrame::clear()
+{
+  markerSets.clear();
+  otherMarkers.clear();
+  rigidBodies.clear();
+}
+
+
+ServerInfo::ServerInfo() :
+    natNetVersion(0,0,0,0),
+    serverVersion(0,0,0,0)
+{
+
+}
+
+
+DataModel::DataModel() :
+  hasValidServerInfo(false)
+{
+
+}
+
+void DataModel::clear()
+{
+  dataFrame.clear();
+}
+
+void DataModel::setVersions(int* nver, int* sver)
+{
+  serverInfo.natNetVersion.setVersion(nver[0], nver[1], nver[2], nver[3]);
+  serverInfo.serverVersion.setVersion(sver[0], sver[1], sver[2], sver[3]);
+  hasValidServerInfo = true;
+}
+
+Version const& DataModel::getNatNetVersion() const
+{
+  return serverInfo.natNetVersion;
+}
+
+Version const& DataModel::getServerVersion() const
+{
+  return serverInfo.serverVersion;
+}
+
+}
