@@ -12,7 +12,6 @@ endif()
 
 find_package(catkin REQUIRED COMPONENTS 
 	roscpp 
-	std_msgs 
 	geometry_msgs 
 	tf 
 	roslaunch)
