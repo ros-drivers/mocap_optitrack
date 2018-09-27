@@ -13,3 +13,6 @@ rigid_bodies:
         use_new_coordinates: true
 optitrack_config:
         multicast_address: 224.0.0.3
+
+poses_to_one_topic: true # If set true then poses are published on below topic.
+poses_topic_name: mocap_bodies

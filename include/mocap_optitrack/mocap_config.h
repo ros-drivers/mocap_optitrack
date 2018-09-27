@@ -74,7 +74,8 @@ class PublishedRigidBody
   bool validateParam(XmlRpc::XmlRpcValue &, const std::string &);
 
   public:
-  PublishedRigidBody(XmlRpc::XmlRpcValue &);
+  PublishedRigidBody(XmlRpc::XmlRpcValue &config_node,
+  		bool poses_one_topic, std::string& poses_one_topic_name)
   void publish(RigidBody &);
 };
 

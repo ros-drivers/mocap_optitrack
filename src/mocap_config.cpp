@@ -54,7 +54,8 @@ const std::string CHILD_FRAME_ID_PARAM_NAME = "child_frame_id";
 const std::string PARENT_FRAME_ID_PARAM_NAME = "parent_frame_id";
 const std::string NEW_COORDINATE_FRAME_PARAM_NAME = "use_new_coordinates";
 
-PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node)
+PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node,
+		bool poses_one_topic, std::string& poses_one_topic_name)
 {
   // load configuration for this rigid body from ROS
   publish_pose = validateParam(config_node, POSE_TOPIC_PARAM_NAME);
@@ -66,8 +67,13 @@ PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node)
 
   if (publish_pose)
   {
-    pose_topic = (std::string&) config_node[POSE_TOPIC_PARAM_NAME];
-    pose_pub = n.advertise<geometry_msgs::PoseStamped>(pose_topic, 1000);
+    if (poses_one_topic) {
+      pose_topic = poses_one_topic_name;
+      pose_pub = n.advertise<geometry_msgs::PoseStamped>(poses_one_topic_name, 1000);
+    } else {
+      pose_topic = (std::string&) config_node[POSE_TOPIC_PARAM_NAME];
+      pose_pub = n.advertise<geometry_msgs::PoseStamped>(pose_topic, 1000);
+    }
   }
 
   if (publish_pose2d)
