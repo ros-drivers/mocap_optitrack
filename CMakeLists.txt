@@ -8,6 +8,8 @@ find_package(catkin REQUIRED COMPONENTS roscpp std_msgs geometry_msgs tf roslaun
 add_service_files(
   FILES
   Calibration.srv
+  SaveCalibration.srv
+  LoadCalibration.srv
 )
 
 generate_messages(
