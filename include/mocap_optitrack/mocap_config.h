@@ -76,7 +76,7 @@ class PublishedRigidBody
   public:
   PublishedRigidBody(XmlRpc::XmlRpcValue &config_node,
   		bool poses_one_topic, const std::string& poses_one_topic_name);
-  void publish(RigidBody &);
+  void publish(RigidBody &, bool poses_one_topic);
 };
 
 typedef std::map<int, PublishedRigidBody> RigidBodyMap;

@@ -62,7 +62,7 @@ bool MocapCalibrate::LoadCalibration(Calibration::Request& req, Calibration::Res
   tf::Transform transform(rot, trans);
   mocap_to_map_tf_.setData(transform);
   publish_mocap_to_map_tf(mocap_to_map_tf_);
-  std::cout << "Calibration data has been load from file: " << calibration_data_path_ << "\n";
+  std::cout << "Calibration data has been loaded from file: " << calibration_data_path_ << "\n";
 }
 
 void MocapCalibrate::publish_mocap_to_map_tf(

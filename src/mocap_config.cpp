@@ -89,7 +89,7 @@ PublishedRigidBody::PublishedRigidBody(XmlRpc::XmlRpcValue &config_node,
   }
 }
 
-void PublishedRigidBody::publish(RigidBody &body)
+void PublishedRigidBody::publish(RigidBody &body, bool poses_one_topic)
 {
   // don't do anything if no new data was provided
   if (!body.has_data())
@@ -107,7 +107,11 @@ void PublishedRigidBody::publish(RigidBody &body)
 
   if (publish_pose)
   {
-    pose.header.frame_id = parent_frame_id;
+    if (poses_one_topic) {
+      pose.header.frame_id = child_frame_id;
+    } else {
+      pose.header.frame_id = parent_frame_id;
+    }
     pose_pub.publish(pose);
   }
 
