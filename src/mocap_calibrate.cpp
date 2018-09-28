@@ -34,7 +34,7 @@ bool MocapCalibrate::calibrate(Calibration::Request& req, Calibration::Response&
 }
 
 bool MocapCalibrate::SaveCalibration(Calibration::Request& req, Calibration::Response& res) {
-  std:ofstream file(calibration_data_path_, std::ios::in | std::ios::trunc);
+  std::ofstream file(calibration_data_path_, std::ios::in | std::ios::trunc);
   file << mocap_to_map_tf_.getOrigin().getX() << std::endl
       << mocap_to_map_tf_.getOrigin().getY() << std::endl
       << mocap_to_map_tf_.getOrigin().getZ() << std::endl
@@ -48,7 +48,7 @@ bool MocapCalibrate::SaveCalibration(Calibration::Request& req, Calibration::Res
 bool MocapCalibrate::LoadCalibration(Calibration::Request& req, Calibration::Response& res) {
   tf::Vector3 trans;
   tf::Quaternion rot;
-  std::ifstream file(calibrtion_data_path_, std::ios::out);
+  std::ifstream file(calibration_data_path_, std::ios::out);
   double val;
   file >> val; trans.setX(val);
   file >> val; trans.setY(val);

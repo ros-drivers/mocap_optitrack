@@ -35,7 +35,6 @@ const std::string MULTICAST_IP_DEFAULT = "224.0.0.1";
 
 const std::string MOCAP_MODEL_KEY = "mocap_model";
 const std::string RIGID_BODIES_KEY = "rigid_bodies";
-const std::string POSES_ONE_TOPIC_KEY = "poses_to_one_topic";
 const char ** DEFAULT_MOCAP_MODEL = OBJECT;
 //const char ** DEFAULT_MOCAP_MODEL = SKELETON_WITHOUT_TOES;
 
@@ -203,7 +202,7 @@ int main( int argc, char* argv[] )
   RigidBodyMap published_rigid_bodies;
 
   bool poses_one_topic = false;
-  n.param<bool>(POSES_ONE_TOPIC, poses_one_topic, false);
+  n.param<bool>("poses_to_one_topic", poses_one_topic, false);
   std::string poses_one_topic_name;
   n.param<std::string>("poses_topic_name", poses_one_topic_name, "mocap_bodies");
 

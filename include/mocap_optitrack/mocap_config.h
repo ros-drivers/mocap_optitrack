@@ -75,7 +75,7 @@ class PublishedRigidBody
 
   public:
   PublishedRigidBody(XmlRpc::XmlRpcValue &config_node,
-  		bool poses_one_topic, std::string& poses_one_topic_name)
+  		bool poses_one_topic, const std::string& poses_one_topic_name);
   void publish(RigidBody &);
 };
 

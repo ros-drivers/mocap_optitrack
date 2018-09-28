@@ -18,6 +18,8 @@ public:
   bool calibrate(Calibration::Request& req,
                  Calibration::Response& res);
 
+  bool SaveCalibration(Calibration::Request& req, Calibration::Response& res);
+  bool LoadCalibration(Calibration::Request& req, Calibration::Response& res);
   void publish_mocap_to_map_tf(tf::StampedTransform& tf);
 
   const std::string calibration_data_path_;
