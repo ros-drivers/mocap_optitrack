@@ -234,9 +234,9 @@ int main( int argc, char* argv[] )
   ros::ServiceServer service = n.advertiseService(
       "mocap_calibrate", &mocap_optitrack::MocapCalibrate::calibrate, &mocap_calibrate);
   ros::ServiceServer save_calibration_data_service = n.advertiseService(
-      "mocap_calibrate", &mocap_optitrack::MocapCalibrate::SaveCalibration, &mocap_calibrate);
+      "mocap_calibration_save", &mocap_optitrack::MocapCalibrate::SaveCalibration, &mocap_calibrate);
   ros::ServiceServer load_calibration_data_service = n.advertiseService(
-      "mocap_calibrate", &mocap_optitrack::MocapCalibrate::LoadCalibration, &mocap_calibrate);
+      "mocap_calibration_load", &mocap_optitrack::MocapCalibrate::LoadCalibration, &mocap_calibrate);
 
   // Process mocap data until SIGINT
   processMocapData(mocap_model, published_rigid_bodies, multicast_ip);
