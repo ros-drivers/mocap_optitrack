@@ -205,7 +205,7 @@ int main( int argc, char* argv[] )
   bool poses_one_topic = false;
   n.param<bool>(POSES_ONE_TOPIC, poses_one_topic, false);
   std::string poses_one_topic_name;
-  n.param<bool>("poses_topic_name", poses_one_topic_name, "mocap_bodies");
+  n.param<std::string>("poses_topic_name", poses_one_topic_name, "mocap_bodies");
 
   if (n.hasParam(RIGID_BODIES_KEY))
   {
@@ -229,9 +229,15 @@ int main( int argc, char* argv[] )
       }
   }
 
-  mocap_optitrack::MocapCalibrate mocap_calibrate;
+  std::string calibration_data_path;
+  n.param<std::string>("calibration_data_path", calibration_data_path, "/code/datasets/mocap/calibration");
+  mocap_optitrack::MocapCalibrate mocap_calibrate(calibration_data_path);
   ros::ServiceServer service = n.advertiseService(
       "mocap_calibrate", &mocap_optitrack::MocapCalibrate::calibrate, &mocap_calibrate);
+  ros::ServiceServer save_calibration_data_service = n.advertiseService(
+      "mocap_calibrate", &mocap_optitrack::MocapCalibrate::SaveCalibration, &mocap_calibrate);
+  ros::ServiceServer load_calibration_data_service = n.advertiseService(
+      "mocap_calibrate", &mocap_optitrack::MocapCalibrate::LoadCalibration, &mocap_calibrate);
 
   // Process mocap data until SIGINT
   processMocapData(mocap_model, published_rigid_bodies, multicast_ip);

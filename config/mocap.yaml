@@ -16,3 +16,6 @@ optitrack_config:
 
 poses_to_one_topic: true # If set true then poses are published on below topic.
 poses_topic_name: mocap_bodies
+
+calibration_data_path: /code/datasets/mocap/calibration
+
