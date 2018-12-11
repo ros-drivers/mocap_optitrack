@@ -52,6 +52,7 @@ struct ServerDescription
   int commandPort;
   int dataPort;
   std::string multicastIpAddress;
+  std::vector<int> version;
 };
 
 /// \brief ROS publisher configuration

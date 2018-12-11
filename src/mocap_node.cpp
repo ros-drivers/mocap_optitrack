@@ -61,6 +61,11 @@ namespace mocap_optitrack
         new UdpMulticastSocket(serverDescription.dataPort, 
           serverDescription.multicastIpAddress)); 
 
+      if (!serverDescription.version.empty())
+      {
+        dataModel.setVersions(&serverDescription.version[0], &serverDescription.version[0]);
+      }
+
       // Need verion information from the server to properly decode any of their packets.
       // If we have not recieved that yet, send another request.  
       while(ros::ok() && !dataModel.hasServerInfo())
