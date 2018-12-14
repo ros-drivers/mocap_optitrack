@@ -74,6 +74,7 @@ namespace rosparam
     const std::string MulticastIpAddress = "optitrack_config/multicast_address";
     const std::string CommandPort = "optitrack_config/command_port";
     const std::string DataPort = "optitrack_config/data_port";
+    const std::string Version = "optitrack_config/version";
     const std::string RigidBodies = "rigid_bodies";
     const std::string PoseTopicName = "pose";
     const std::string Pose2dTopicName = "pose2d";
@@ -122,6 +123,15 @@ void NodeConfiguration::fromRosParam(
   {
     ROS_WARN_STREAM("Could not get data port, using default: " << 
       serverDescription.dataPort);
+  }
+
+  if (nh.hasParam(rosparam::keys::Version) )
+  {
+    nh.getParam(rosparam::keys::Version, serverDescription.version);
+  }
+  else
+  {
+    ROS_WARN_STREAM("Could not get server version, using auto");
   }
 
   // Parse rigid bodies section
