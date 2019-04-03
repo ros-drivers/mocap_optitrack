@@ -33,7 +33,7 @@
 #include <vector>
 #include <string>
 
-#include <ros/ros.h>
+#include <rclcpp/node.hpp>
 
 namespace mocap_optitrack
 {
@@ -52,7 +52,7 @@ struct ServerDescription
   int commandPort;
   int dataPort;
   std::string multicastIpAddress;
-  std::vector<int> version;
+  std::vector<int64_t> version;
 };
 
 /// \brief ROS publisher configuration
@@ -74,7 +74,7 @@ typedef std::vector<PublisherConfiguration> PublisherConfigurations;
 /// \brief Handles loading node configuration from different sources
 struct NodeConfiguration
 {
-  static void fromRosParam(ros::NodeHandle& nh, 
+  static void fromRosParam(rclcpp::Node::SharedPtr& nh, 
     ServerDescription& serverDescription, 
     PublisherConfigurations& pubConfigs);
 };

@@ -125,6 +125,7 @@ public:
     void clear();
 
     void setVersions(int* nver, int* sver);
+    void setVersions(int64_t* nver, int64_t* sver);
     Version const& getNatNetVersion() const;
     Version const& getServerVersion() const;
     bool hasServerInfo() const {return hasValidServerInfo;};
