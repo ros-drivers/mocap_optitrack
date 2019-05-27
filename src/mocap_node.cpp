@@ -34,9 +34,9 @@
 #include <mocap_optitrack/rigid_body_publisher.h>
 #include "natnet/natnet_messages.h"
 
-// ROS includes
-#include <ros/ros.h>
-
+// ROS2 includes
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp/logger.hpp>
 
 namespace mocap_optitrack
 {
@@ -44,10 +44,12 @@ namespace mocap_optitrack
   class OptiTrackRosBridge
   {
   public:
-    OptiTrackRosBridge(ros::NodeHandle& nh,
+    OptiTrackRosBridge(
+      rclcpp::Node::SharedPtr &node,
       ServerDescription const& serverDescr, 
       PublisherConfigurations const& pubConfigs) :
-        nh(nh),
+        node(node),
+        clock(node->get_clock()),
         serverDescription(serverDescr),
         publisherConfigurations(pubConfigs)
     {
@@ -58,7 +60,9 @@ namespace mocap_optitrack
     {
       // Create socket
       multicastClientSocketPtr.reset(
-        new UdpMulticastSocket(serverDescription.dataPort, 
+        new UdpMulticastSocket(
+          node,
+          serverDescription.dataPort, 
           serverDescription.multicastIpAddress)); 
 
       if (!serverDescription.version.empty())
@@ -68,7 +72,7 @@ namespace mocap_optitrack
 
       // Need verion information from the server to properly decode any of their packets.
       // If we have not recieved that yet, send another request.  
-      while(ros::ok() && !dataModel.hasServerInfo())
+      while(rclcpp::ok() && !dataModel.hasServerInfo())
       {
         natnet::ConnectionRequestMessage connectionRequestMsg;
         natnet::MessageBuffer connectionRequestMsgBuffer;
@@ -77,28 +81,30 @@ namespace mocap_optitrack
           &connectionRequestMsgBuffer[0], 
           connectionRequestMsgBuffer.size(), 
           serverDescription.commandPort);
-
-        if (updateDataModelFromServer()) usleep(10);
+        // TODO : need to know about sleep rule
+        if (updateDataModelFromServer()) {
+        }
+        usleep(10);
       }
 
       // Once we have the server info, create publishers
       publishDispatcherPtr.reset(
-        new RigidBodyPublishDispatcher(nh, 
+        new RigidBodyPublishDispatcher(node, 
           dataModel.getNatNetVersion(), 
           publisherConfigurations));
 
-      ROS_INFO("Initialization complete");
+      RCLCPP_INFO(node->get_logger(), "Initialization complete");
     };
 
     void run()
     {
-      while (ros::ok())
+      while (rclcpp::ok())
       {
         if (updateDataModelFromServer())
         {
           // Maybe we got some data? If we did it would be in the form of one or more
           // rigid bodies in the data model
-          ros::Time time = ros::Time::now();
+          const rclcpp::Time time = clock->now();
           publishDispatcherPtr->publish(time, dataModel.dataFrame.rigidBodies);
 
           // Clear out the model to prepare for the next frame of data
@@ -122,7 +128,7 @@ namespace mocap_optitrack
 
         // Copy char* buffer into MessageBuffer and dispatch to be deserialized
         natnet::MessageBuffer msgBuffer(pMsgBuffer, pMsgBuffer + numBytesReceived);
-        natnet::MessageDispatcher::dispatch(msgBuffer, &dataModel);
+        natnet::MessageDispatcher::dispatch(node->get_logger(), msgBuffer, &dataModel);
 
         return true;
       }
@@ -130,7 +136,8 @@ namespace mocap_optitrack
       return false;
     };
 
-    ros::NodeHandle& nh;
+    rclcpp::Node::SharedPtr node;
+    rclcpp::Clock::SharedPtr clock;
     ServerDescription serverDescription;
     PublisherConfigurations publisherConfigurations;
     DataModel dataModel;
@@ -144,17 +151,17 @@ namespace mocap_optitrack
 ////////////////////////////////////////////////////////////////////////
 int main( int argc, char* argv[] )
 {
-  // Initialize ROS node
-  ros::init(argc, argv, "mocap_node");
-  ros::NodeHandle nh("~");
-
+  // Initialize ROS2 node
+  rclcpp::init(argc, argv);
+  rclcpp::Node::SharedPtr rclcpp_node = std::make_shared<rclcpp::Node>("mocap_node");
+  
   // Grab node configuration from rosparam
   mocap_optitrack::ServerDescription serverDescription;
   mocap_optitrack::PublisherConfigurations publisherConfigurations;
-  mocap_optitrack::NodeConfiguration::fromRosParam(nh, serverDescription, publisherConfigurations);
+  mocap_optitrack::NodeConfiguration::fromRosParam(rclcpp_node, serverDescription, publisherConfigurations);
 
   // Create node object, initialize and run
-  mocap_optitrack::OptiTrackRosBridge node(nh, serverDescription, publisherConfigurations);
+  mocap_optitrack::OptiTrackRosBridge node(rclcpp_node, serverDescription, publisherConfigurations);
   node.initialize();
   node.run();
 
