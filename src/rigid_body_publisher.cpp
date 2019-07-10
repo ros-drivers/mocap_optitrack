@@ -43,13 +43,13 @@ namespace utilities
     if (newCoordinates)
     {
       // Motive 1.7+ coordinate system
-      poseStampedMsg.pose.position.x = -body.pose.position.x;
+      poseStampedMsg.pose.position.x = body.pose.position.x;
       poseStampedMsg.pose.position.y = body.pose.position.z;
-      poseStampedMsg.pose.position.z = body.pose.position.y;
+      poseStampedMsg.pose.position.z = -body.pose.position.y;
   
-      poseStampedMsg.pose.orientation.x = -body.pose.orientation.x;
+      poseStampedMsg.pose.orientation.x = body.pose.orientation.x;
       poseStampedMsg.pose.orientation.y = body.pose.orientation.z;
-      poseStampedMsg.pose.orientation.z = body.pose.orientation.y;
+      poseStampedMsg.pose.orientation.z = -body.pose.orientation.y;
       poseStampedMsg.pose.orientation.w = body.pose.orientation.w;
     }
     else
@@ -81,6 +81,7 @@ RigidBodyPublisher::RigidBodyPublisher(ros::NodeHandle &nh,
 
   // Motive 1.7+ uses a new coordinate system
   useNewCoordinates = (natNetVersion >= Version("1.7"));
+  ROS_INFO_STREAM("Using new coordinates = " << useNewCoordinates);
 }
 
 RigidBodyPublisher::~RigidBodyPublisher()
