@@ -81,7 +81,6 @@ RigidBodyPublisher::RigidBodyPublisher(ros::NodeHandle &nh,
 
   // Motive 1.7+ uses a new coordinate system
   useNewCoordinates = (natNetVersion >= Version("1.7"));
-  ROS_INFO_STREAM("Using new coordinates = " << useNewCoordinates);
 }
 
 RigidBodyPublisher::~RigidBodyPublisher()
