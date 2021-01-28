@@ -61,6 +61,7 @@ private:
   tf::TransformBroadcaster tfPublisher;
   ros::Publisher posePublisher;
   ros::Publisher pose2dPublisher;
+  ros::Publisher odomPublisher;
 };
 
 /// \brief Dispatches RigidBody data to the correct publisher.

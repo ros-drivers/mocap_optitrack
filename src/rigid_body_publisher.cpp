@@ -31,6 +31,7 @@
 
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose2D.h>
+#include <nav_msgs/Odometry.h>
 
 namespace mocap_optitrack
 {
@@ -65,7 +66,36 @@ namespace utilities
       poseStampedMsg.pose.orientation.w = body.pose.orientation.w;
     }
     return poseStampedMsg;
-  }   
+  }
+  nav_msgs::Odometry getRosOdom(RigidBody const& body, bool newCoordinates)
+    {
+      nav_msgs::Odometry OdometryMsg;
+      if (newCoordinates)
+      {
+        // Motive 1.7+ coordinate system
+        OdometryMsg.pose.pose.position.x = -body.pose.position.x;
+        OdometryMsg.pose.pose.position.y = body.pose.position.z;
+        OdometryMsg.pose.pose.position.z = body.pose.position.y;
+
+        OdometryMsg.pose.pose.orientation.x = -body.pose.orientation.x;
+        OdometryMsg.pose.pose.orientation.y = body.pose.orientation.z;
+        OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
+        OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
+      }
+      else
+      {
+        // y & z axes are swapped in the Optitrack coordinate system
+        OdometryMsg.pose.pose.position.x = body.pose.position.x;
+        OdometryMsg.pose.pose.position.y = -body.pose.position.z;
+        OdometryMsg.pose.pose.position.z = body.pose.position.y;
+
+        OdometryMsg.pose.pose.orientation.x = body.pose.orientation.x;
+        OdometryMsg.pose.pose.orientation.y = -body.pose.orientation.z;
+        OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
+        OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
+      }
+      return OdometryMsg;
+    }
 }
 
 RigidBodyPublisher::RigidBodyPublisher(ros::NodeHandle &nh, 
@@ -78,6 +108,9 @@ RigidBodyPublisher::RigidBodyPublisher(ros::NodeHandle &nh,
 
   if (config.publishPose2d)
     pose2dPublisher = nh.advertise<geometry_msgs::Pose2D>(config.pose2dTopicName, 1000);
+
+  if (config.publishOdom)
+    odomPublisher = nh.advertise<nav_msgs::Odometry>(config.odomTopicName, 1000);
 
   // Motive 1.7+ uses a new coordinate system
   useNewCoordinates = (natNetVersion >= Version("1.7"));
@@ -103,7 +136,9 @@ void RigidBodyPublisher::publish(ros::Time const& time, RigidBody const& body)
   }
 
   geometry_msgs::PoseStamped pose = utilities::getRosPose(body, useNewCoordinates);
+  nav_msgs::Odometry odom =  utilities::getRosOdom(body, useNewCoordinates);
   pose.header.stamp = time;
+  odom.header.stamp = time;
 
   if (config.publishPose)
   {
@@ -116,6 +151,18 @@ void RigidBodyPublisher::publish(ros::Time const& time, RigidBody const& body)
                    pose.pose.orientation.z,
                    pose.pose.orientation.w);
 
+  if (config.publishOdom)
+    {
+      odom.header.frame_id = config.parentFrameId;
+      odom.child_frame_id = config.childFrameId;
+      odomPublisher.publish(odom);
+    }
+  if (config.publishOdom)
+  {
+    odom.header.frame_id = config.parentFrameId;
+    odom.child_frame_id = config.childFrameId;
+    odomPublisher.publish(odom);
+  }
   // publish 2D pose
   if (config.publishPose2d)
   {

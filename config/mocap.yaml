@@ -6,11 +6,13 @@ rigid_bodies:
     '1':
         pose: Robot_1/pose
         pose2d: Robot_1/ground_pose
+        odom: Robot_1/Odom
         child_frame_id: Robot_1/base_link
         parent_frame_id: world
     '2':
         pose: Robot_2/pose
         pose2d: Robot_2/ground_pose
+        odom: Robot_2/Odom
         child_frame_id: Robot_2/base_link
         parent_frame_id: world
 optitrack_config:
