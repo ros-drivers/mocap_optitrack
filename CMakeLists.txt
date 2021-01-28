@@ -12,13 +12,21 @@ endif()
 
 find_package(catkin REQUIRED COMPONENTS 
 	roscpp 
-	geometry_msgs 
+	geometry_msgs
+	dynamic_reconfigure 
 	tf 
 	roslaunch)
+
+# dynamic reconfigure
+generate_dynamic_reconfigure_options(
+  cfg/MocapOptitrack.cfg
+)
+
 
 catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp
+  dynamic_reconfigure
 )
 
 include_directories(include

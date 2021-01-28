@@ -33,6 +33,8 @@
 #include <mocap_optitrack/mocap_config.h>
 #include <mocap_optitrack/rigid_body_publisher.h>
 #include "natnet/natnet_messages.h"
+#include "mocap_optitrack/MocapOptitrackConfig.h"
+#include <dynamic_reconfigure/server.h>
 
 // ROS includes
 #include <ros/ros.h>
@@ -47,66 +49,80 @@ namespace mocap_optitrack
     OptiTrackRosBridge(ros::NodeHandle& nh,
       ServerDescription const& serverDescr, 
       PublisherConfigurations const& pubConfigs) :
-        nh(nh),
-        serverDescription(serverDescr),
-        publisherConfigurations(pubConfigs)
+        nh(nh)
     {
+        server.setCallback(boost::bind(&OptiTrackRosBridge::reconfigureCallback, this, _1, _2));
+        serverDescription = serverDescr;
+        publisherConfigurations = pubConfigs;
+    }
 
+    void reconfigureCallback(MocapOptitrackConfig& config, uint32_t)
+    {
+       serverDescription.enableOptitrack = config.enable_optitrack;
+       serverDescription.commandPort = config.command_port;
+       serverDescription.dataPort = config.data_port;
+       serverDescription.multicastIpAddress = config.multicast_address;
+
+       initialize();
     }
 
     void initialize()
     {
-      // Create socket
-      multicastClientSocketPtr.reset(
-        new UdpMulticastSocket(serverDescription.dataPort, 
-          serverDescription.multicastIpAddress)); 
+      if (serverDescription.enableOptitrack) {
+          // Create socket
+          multicastClientSocketPtr.reset(
+            new UdpMulticastSocket(serverDescription.dataPort,
+              serverDescription.multicastIpAddress));
 
-      if (!serverDescription.version.empty())
-      {
-        dataModel.setVersions(&serverDescription.version[0], &serverDescription.version[0]);
-      }
+          if (!serverDescription.version.empty() )
+          {
+            dataModel.setVersions(&serverDescription.version[0], &serverDescription.version[0]);
+          }
 
-      // Need verion information from the server to properly decode any of their packets.
-      // If we have not recieved that yet, send another request.  
-      while(ros::ok() && !dataModel.hasServerInfo())
-      {
-        natnet::ConnectionRequestMessage connectionRequestMsg;
-        natnet::MessageBuffer connectionRequestMsgBuffer;
-        connectionRequestMsg.serialize(connectionRequestMsgBuffer, NULL);
-        int ret = multicastClientSocketPtr->send(
-          &connectionRequestMsgBuffer[0], 
-          connectionRequestMsgBuffer.size(), 
-          serverDescription.commandPort);
-
-        if (updateDataModelFromServer()) usleep(10);
-      }
-
-      // Once we have the server info, create publishers
-      publishDispatcherPtr.reset(
-        new RigidBodyPublishDispatcher(nh, 
-          dataModel.getNatNetVersion(), 
-          publisherConfigurations));
-
-      ROS_INFO("Initialization complete");
+          // Need verion information from the server to properly decode any of their packets.
+          // If we have not recieved that yet, send another request.
+          while(ros::ok() && !dataModel.hasServerInfo())
+          {
+            natnet::ConnectionRequestMessage connectionRequestMsg;
+            natnet::MessageBuffer connectionRequestMsgBuffer;
+            connectionRequestMsg.serialize(connectionRequestMsgBuffer, NULL);
+            int ret = multicastClientSocketPtr->send(
+              &connectionRequestMsgBuffer[0],
+              connectionRequestMsgBuffer.size(),
+              serverDescription.commandPort);
+            if (updateDataModelFromServer()) usleep(10);
+            ros::spinOnce();
+          }
+          // Once we have the server info, create publishers
+          publishDispatcherPtr.reset(
+            new RigidBodyPublishDispatcher(nh,
+              dataModel.getNatNetVersion(),
+              publisherConfigurations));
+          ROS_INFO("Initialization complete");
+          initialized = true;
+      }else{ROS_INFO("Initialization incomplete"); initialized = false;}
     };
 
     void run()
     {
       while (ros::ok())
       {
-        if (updateDataModelFromServer())
-        {
-          // Maybe we got some data? If we did it would be in the form of one or more
-          // rigid bodies in the data model
-          ros::Time time = ros::Time::now();
-          publishDispatcherPtr->publish(time, dataModel.dataFrame.rigidBodies);
+        if (initialized){
+            if (updateDataModelFromServer())
+            {
+              // Maybe we got some data? If we did it would be in the form of one or more
+              // rigid bodies in the data model
+              ros::Time time = ros::Time::now();
+              publishDispatcherPtr->publish(time, dataModel.dataFrame.rigidBodies);
 
-          // Clear out the model to prepare for the next frame of data
-          dataModel.clear();
+              // Clear out the model to prepare for the next frame of data
+              dataModel.clear();
 
-          // If we processed some data, take a short break
-          usleep( 10 );
+              // If we processed some data, take a short break
+              usleep( 10 );
+            }
         }
+        ros::spinOnce();
       }
     }
 
@@ -136,6 +152,8 @@ namespace mocap_optitrack
     DataModel dataModel;
     std::unique_ptr<UdpMulticastSocket> multicastClientSocketPtr;
     std::unique_ptr<RigidBodyPublishDispatcher> publishDispatcherPtr;
+    dynamic_reconfigure::Server<MocapOptitrackConfig> server;
+    bool initialized;
   };
 
 } // namespace
