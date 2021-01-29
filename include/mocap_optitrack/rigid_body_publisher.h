@@ -56,7 +56,7 @@ public:
 private:
   PublisherConfiguration config;
 
-  bool useNewCoordinates;
+  Version coordinatesVersion;
 
   tf::TransformBroadcaster tfPublisher;
   ros::Publisher posePublisher;
