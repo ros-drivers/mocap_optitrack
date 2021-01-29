@@ -37,7 +37,7 @@ namespace mocap_optitrack
 
 namespace utilities
 {
-  geometry_msgs::PoseStamped getRosPose(RigidBody const& body, Version coordinatesVersion)
+  geometry_msgs::PoseStamped getRosPose(RigidBody const& body, const Version& coordinatesVersion)
   {
     geometry_msgs::PoseStamped poseStampedMsg;
     if (coordinatesVersion >= Version("2.0"))
