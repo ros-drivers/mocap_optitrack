@@ -46,12 +46,14 @@ struct ServerDescription
     static const int CommandPort;
     static const int DataPort;
     static const std::string MulticastIpAddress;
+    static const bool EnableOptitrack;
   };
 
   ServerDescription();
   int commandPort;
   int dataPort;
   std::string multicastIpAddress;
+  bool enableOptitrack;
   std::vector<int> version;
 };
 

@@ -35,4 +35,5 @@
   <depend>roscpp</depend>
   <depend>tf</depend>
   <depend>geometry_msgs</depend>
+  <depend>dynamic_reconfigure</depend>
 </package>
