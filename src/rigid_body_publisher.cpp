@@ -67,35 +67,46 @@ namespace utilities
     }
     return poseStampedMsg;
   }
-  nav_msgs::Odometry getRosOdom(RigidBody const& body, bool newCoordinates)
+  nav_msgs::Odometry getRosOdom(RigidBody const& body, const Version& coordinatesVersion)
+  {
+    nav_msgs::Odometry OdometryMsg;
+    if (coordinatesVersion >= Version("2.0"))
     {
-      nav_msgs::Odometry OdometryMsg;
-      if (newCoordinates)
-      {
-        // Motive 1.7+ coordinate system
-        OdometryMsg.pose.pose.position.x = -body.pose.position.x;
-        OdometryMsg.pose.pose.position.y = body.pose.position.z;
-        OdometryMsg.pose.pose.position.z = body.pose.position.y;
+      // Motive 2.0+ coordinate system
+      OdometryMsg.pose.pose.position.x = body.pose.position.x;
+      OdometryMsg.pose.pose.position.y = body.pose.position.z;
+      OdometryMsg.pose.pose.position.z = body.pose.position.y;
 
-        OdometryMsg.pose.pose.orientation.x = -body.pose.orientation.x;
-        OdometryMsg.pose.pose.orientation.y = body.pose.orientation.z;
-        OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
-        OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
-      }
-      else
-      {
-        // y & z axes are swapped in the Optitrack coordinate system
-        OdometryMsg.pose.pose.position.x = body.pose.position.x;
-        OdometryMsg.pose.pose.position.y = -body.pose.position.z;
-        OdometryMsg.pose.pose.position.z = body.pose.position.y;
-
-        OdometryMsg.pose.pose.orientation.x = body.pose.orientation.x;
-        OdometryMsg.pose.pose.orientation.y = -body.pose.orientation.z;
-        OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
-        OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
-      }
-      return OdometryMsg;
+      OdometryMsg.pose.pose.orientation.x = body.pose.orientation.x;
+      OdometryMsg.pose.pose.orientation.y = body.pose.orientation.z;
+      OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
+      OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
     }
+    else if (coordinatesVersion < Version("2.0") && coordinatesVersion >= Version("1.7")) {
+      // Motive 1.7+ coordinate system
+      OdometryMsg.pose.pose.position.x = -body.pose.position.x;
+      OdometryMsg.pose.pose.position.y = body.pose.position.z;
+      OdometryMsg.pose.pose.position.z = body.pose.position.y;
+
+      OdometryMsg.pose.pose.orientation.x = -body.pose.orientation.x;
+      OdometryMsg.pose.pose.orientation.y = body.pose.orientation.z;
+      OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
+      OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
+    }
+    else
+    {
+      // y & z axes are swapped in the Optitrack coordinate system
+      OdometryMsg.pose.pose.position.x = body.pose.position.x;
+      OdometryMsg.pose.pose.position.y = -body.pose.position.z;
+      OdometryMsg.pose.pose.position.z = body.pose.position.y;
+
+      OdometryMsg.pose.pose.orientation.x = body.pose.orientation.x;
+      OdometryMsg.pose.pose.orientation.y = -body.pose.orientation.z;
+      OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
+      OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
+    }
+    return OdometryMsg;
+  }
 }
 
 RigidBodyPublisher::RigidBodyPublisher(ros::NodeHandle &nh, 
@@ -114,6 +125,9 @@ RigidBodyPublisher::RigidBodyPublisher(ros::NodeHandle &nh,
 
   // Motive 1.7+ uses a new coordinate system
   useNewCoordinates = (natNetVersion >= Version("1.7"));
+//  natNetVersion = (natNetVersion >= Version("1.7"));
+    coordinatesVersion = natNetVersion ;
+
 }
 
 RigidBodyPublisher::~RigidBodyPublisher()
@@ -135,7 +149,7 @@ void RigidBodyPublisher::publish(ros::Time const& time, RigidBody const& body)
     return;
   }
 
-  geometry_msgs::PoseStamped pose = utilities::getRosPose(body, useNewCoordinates);
+  geometry_msgs::PoseStamped pose = utilities::getRosPose(body, coordinatesVersion);
   nav_msgs::Odometry odom =  utilities::getRosOdom(body, useNewCoordinates);
   pose.header.stamp = time;
   odom.header.stamp = time;
