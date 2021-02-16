@@ -65,6 +65,7 @@ namespace impl
 const int ServerDescription::Default::CommandPort = 1510;
 const int ServerDescription::Default::DataPort   = 9000;
 const std::string ServerDescription::Default::MulticastIpAddress = "224.0.0.1";
+const bool ServerDescription::Default::EnableOptitrack   = true;
 
 // Param keys
 namespace rosparam
@@ -74,6 +75,7 @@ namespace rosparam
     const std::string MulticastIpAddress = "optitrack_config/multicast_address";
     const std::string CommandPort = "optitrack_config/command_port";
     const std::string DataPort = "optitrack_config/data_port";
+    const std::string EnableOptitrack = "optitrack_config/enable_optitrack";
     const std::string Version = "optitrack_config/version";
     const std::string RigidBodies = "rigid_bodies";
     const std::string PoseTopicName = "pose";
@@ -87,6 +89,7 @@ namespace rosparam
 ServerDescription::ServerDescription() :
   commandPort(ServerDescription::Default::CommandPort),
   dataPort(ServerDescription::Default::DataPort),
+  enableOptitrack(ServerDescription::Default::EnableOptitrack),
   multicastIpAddress(ServerDescription::Default::MulticastIpAddress)
 {}
 
@@ -114,6 +117,16 @@ void NodeConfiguration::fromRosParam(
   {
     ROS_WARN_STREAM("Could not get command port, using default: " << 
       serverDescription.commandPort);
+  }
+
+  if (nh.hasParam(rosparam::keys::EnableOptitrack) )
+  {
+    nh.getParam(rosparam::keys::EnableOptitrack, serverDescription.enableOptitrack);
+  }
+  else
+  {
+    ROS_WARN_STREAM("Could not get enable optitrack, using default: " <<
+      serverDescription.enableOptitrack);
   }
 
   if (nh.hasParam(rosparam::keys::DataPort) )

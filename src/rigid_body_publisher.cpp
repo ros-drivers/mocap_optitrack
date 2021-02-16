@@ -38,16 +38,27 @@ namespace mocap_optitrack
 
 namespace utilities
 {
-  geometry_msgs::PoseStamped getRosPose(RigidBody const& body, bool newCoordinates)
+  geometry_msgs::PoseStamped getRosPose(RigidBody const& body, const Version& coordinatesVersion)
   {
     geometry_msgs::PoseStamped poseStampedMsg;
-    if (newCoordinates)
+    if (coordinatesVersion >= Version("2.0"))
     {
-      // Motive 1.7+ coordinate system
-      poseStampedMsg.pose.position.x = -body.pose.position.x;
+      // Motive 2.0+ coordinate system
+      poseStampedMsg.pose.position.x = body.pose.position.x;
       poseStampedMsg.pose.position.y = body.pose.position.z;
       poseStampedMsg.pose.position.z = body.pose.position.y;
   
+      poseStampedMsg.pose.orientation.x = body.pose.orientation.x;
+      poseStampedMsg.pose.orientation.y = body.pose.orientation.z;
+      poseStampedMsg.pose.orientation.z = body.pose.orientation.y;
+      poseStampedMsg.pose.orientation.w = body.pose.orientation.w;
+    }
+    else if (coordinatesVersion < Version("2.0") && coordinatesVersion >= Version("1.7")) {
+        // Motive 1.7+ coordinate system
+      poseStampedMsg.pose.position.x = -body.pose.position.x;
+      poseStampedMsg.pose.position.y = body.pose.position.z;
+      poseStampedMsg.pose.position.z = body.pose.position.y;
+
       poseStampedMsg.pose.orientation.x = -body.pose.orientation.x;
       poseStampedMsg.pose.orientation.y = body.pose.orientation.z;
       poseStampedMsg.pose.orientation.z = body.pose.orientation.y;
@@ -124,7 +135,6 @@ RigidBodyPublisher::RigidBodyPublisher(ros::NodeHandle &nh,
     odomPublisher = nh.advertise<nav_msgs::Odometry>(config.odomTopicName, 1000);
 
   // Motive 1.7+ uses a new coordinate system
-  useNewCoordinates = (natNetVersion >= Version("1.7"));
 //  natNetVersion = (natNetVersion >= Version("1.7"));
     coordinatesVersion = natNetVersion ;
 
@@ -150,7 +160,8 @@ void RigidBodyPublisher::publish(ros::Time const& time, RigidBody const& body)
   }
 
   geometry_msgs::PoseStamped pose = utilities::getRosPose(body, coordinatesVersion);
-  nav_msgs::Odometry odom =  utilities::getRosOdom(body, useNewCoordinates);
+  nav_msgs::Odometry odom =  utilities::getRosOdom(body, coordinatesVersion);
+
   pose.header.stamp = time;
   odom.header.stamp = time;
 
