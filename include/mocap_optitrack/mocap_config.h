@@ -63,11 +63,13 @@ struct PublisherConfiguration
   int rigidBodyId;
   std::string poseTopicName;
   std::string pose2dTopicName;
+  std::string odomTopicName;
   std::string childFrameId;
   std::string parentFrameId;
 
   bool publishPose;
   bool publishPose2d;
+  bool publishOdom;
   bool publishTf;
 };
 

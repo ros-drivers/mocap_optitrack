@@ -80,6 +80,7 @@ namespace rosparam
     const std::string RigidBodies = "rigid_bodies";
     const std::string PoseTopicName = "pose";
     const std::string Pose2dTopicName = "pose2d";
+    const std::string OdomTopicName = "odom";
     const std::string ChildFrameId = "child_frame_id";
     const std::string ParentFrameId = "parent_frame_id";
   }
@@ -194,6 +195,20 @@ void NodeConfiguration::fromRosParam(
           else
           {
             publisherConfig.publishPose2d = true;
+          }
+
+          bool readOdomTopicName = impl::check_and_get_param(bodyParameters,
+            rosparam::keys::OdomTopicName, publisherConfig.odomTopicName);
+
+          if (!readOdomTopicName)
+          {
+            ROS_WARN_STREAM("Failed to parse " << rosparam::keys::OdomTopicName <<
+              " for body `" << publisherConfig.rigidBodyId << "`. Odom publishing disabled.");
+            publisherConfig.publishOdom = false;
+          }
+          else
+          {
+            publisherConfig.publishOdom = true;
           }
 
           bool readChildFrameId = impl::check_and_get_param(bodyParameters,
