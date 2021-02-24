@@ -93,7 +93,8 @@ namespace utilities
       OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
       OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
     }
-    else if (coordinatesVersion < Version("2.0") && coordinatesVersion >= Version("1.7")) {
+    else if (coordinatesVersion < Version("2.0") && coordinatesVersion >= Version("1.7"))
+    {
       // Motive 1.7+ coordinate system
       OdometryMsg.pose.pose.position.x = -body.pose.position.x;
       OdometryMsg.pose.pose.position.y = body.pose.position.z;
@@ -177,11 +178,11 @@ void RigidBodyPublisher::publish(ros::Time const& time, RigidBody const& body)
                    pose.pose.orientation.w);
 
   if (config.publishOdom)
-    {
-      odom.header.frame_id = config.parentFrameId;
-      odom.child_frame_id = config.childFrameId;
-      odomPublisher.publish(odom);
-    }
+  {
+    odom.header.frame_id = config.parentFrameId;
+    odom.child_frame_id = config.childFrameId;
+    odomPublisher.publish(odom);
+  }
   if (config.publishOdom)
   {
     odom.header.frame_id = config.parentFrameId;
