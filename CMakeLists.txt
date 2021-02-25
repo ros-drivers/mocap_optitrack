@@ -11,10 +11,11 @@ else()
 endif()
 
 find_package(catkin REQUIRED COMPONENTS 
-	roscpp 
-	geometry_msgs
-	dynamic_reconfigure 
-	tf)
+  roscpp
+  geometry_msgs
+  nav_msgs
+  dynamic_reconfigure
+  tf)
 
 # dynamic reconfigure
 generate_dynamic_reconfigure_options(

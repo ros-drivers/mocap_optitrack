@@ -34,6 +34,7 @@
 
   <depend>dynamic_reconfigure</depend>
   <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
   <depend>roscpp</depend>
   <depend>tf</depend>
 
