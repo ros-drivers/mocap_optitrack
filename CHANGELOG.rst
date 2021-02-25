@@ -2,8 +2,8 @@
 Changelog for package mocap_optitrack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2021-02-24)
+------------------
 * Reset package version.
 * Bumped CMake version to avoid author warning.
 * Added nav_msgs as dep.
