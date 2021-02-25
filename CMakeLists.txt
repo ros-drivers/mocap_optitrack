@@ -45,6 +45,7 @@ if (CATKIN_ENABLE_TESTING)
   file(GLOB LINT_SRCS
     src/*.cpp
     include/*.h)
+  set(ROSLINT_CPP_OPTS "--filter=-runtime/string,-readability/casting,-runtime/references")
   roslint_cpp(${LINT_SRCS})
   roslint_add_test()
 endif()
