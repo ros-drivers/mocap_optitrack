@@ -14,8 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
 	roscpp 
 	geometry_msgs
 	dynamic_reconfigure 
-	tf 
-	roslaunch)
+	tf)
 
 # dynamic reconfigure
 generate_dynamic_reconfigure_options(
@@ -38,5 +37,14 @@ add_subdirectory(src)
 install(DIRECTORY launch config
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
-# Check the validity of the supplied launch files.
-roslaunch_add_file_check(launch)
+if (CATKIN_ENABLE_TESTING)
+  find_package(roslaunch REQUIRED)
+  roslaunch_add_file_check(launch/mocap.launch)
+
+  find_package(roslint REQUIRED)
+  file(GLOB LINT_SRCS
+    src/*.cpp
+    include/*.h)
+  roslint_cpp(${LINT_SRCS})
+  roslint_add_test()
+endif()

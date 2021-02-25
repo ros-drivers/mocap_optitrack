@@ -31,9 +31,12 @@
   <url type="repository">https://github.com/ros-drivers/mocap_optitrack</url>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>roslaunch</build_depend>  <!-- for roslaunch_add_file_check -->
+
+  <depend>dynamic_reconfigure</depend>
+  <depend>geometry_msgs</depend>
   <depend>roscpp</depend>
   <depend>tf</depend>
-  <depend>geometry_msgs</depend>
-  <depend>dynamic_reconfigure</depend>
+
+  <test_depend>roslaunch</test_depend>
+  <test_depend>roslint</test_depend>
 </package>
