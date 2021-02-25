@@ -1,0 +1,53 @@
+name: CI mocap_optitrack
+
+on: [push, pull_request]
+
+jobs:
+  ci_melodic_release:
+    name: Melodic against release repository
+    strategy:
+      matrix:
+        env:
+          - {ROS_DISTRO: melodic, ROS_REPO: main}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: 'ros-industrial/industrial_ci@master'
+        env: ${{matrix.env}}
+
+  ci_kinetic_release:
+    name: Kinetic against release repository
+    strategy:
+      matrix:
+        env:
+          - {ROS_DISTRO: kinetic, ROS_REPO: main}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: 'ros-industrial/industrial_ci@master'
+        env: ${{matrix.env}}
+
+
+  ci_melodic_testing:
+    name: Melodic against testing repository
+    strategy:
+      matrix:
+        env:
+          - {ROS_DISTRO: melodic, ROS_REPO: testing}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: 'ros-industrial/industrial_ci@master'
+        env: ${{matrix.env}}
+
+  ci_kinetic_testing:
+    name: Kinetic against testing repository
+    strategy:
+      matrix:
+        env:
+          - {ROS_DISTRO: kinetic, ROS_REPO: testing}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: 'ros-industrial/industrial_ci@master'
+        env: ${{matrix.env}}
