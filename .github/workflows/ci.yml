@@ -1,8 +1,21 @@
-name: CI mocap_optitrack
+name: ci_mocap_optitrack
 
 on: [push, pull_request]
 
 jobs:
+
+  ci_noetic_release:
+    name: Noetic against release repository
+    strategy:
+      matrix:
+        env:
+          - {ROS_DISTRO: noetic, ROS_REPO: main}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: 'ros-industrial/industrial_ci@master'
+        env: ${{matrix.env}}
+
   ci_melodic_release:
     name: Melodic against release repository
     strategy:
@@ -27,6 +40,17 @@ jobs:
       - uses: 'ros-industrial/industrial_ci@master'
         env: ${{matrix.env}}
 
+  ci_noetic_testing:
+    name: Noetic against testing repository
+    strategy:
+      matrix:
+        env:
+          - {ROS_DISTRO: noetic, ROS_REPO: testing}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: 'ros-industrial/industrial_ci@master'
+        env: ${{matrix.env}}
 
   ci_melodic_testing:
     name: Melodic against testing repository
