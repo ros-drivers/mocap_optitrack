@@ -82,7 +82,7 @@ const std::string RigidBodies = "rigid_bodies";
 const std::string PoseTopicName = "pose";
 const std::string Pose2dTopicName = "pose2d";
 const std::string OdomTopicName = "odom";
-const bool EnableTfPublisher = true;
+const std::string EnableTfPublisher = "enable_tf_publisher";
 const std::string ChildFrameId = "child_frame_id";
 const std::string ParentFrameId = "parent_frame_id";
 }  // namespace keys
@@ -213,15 +213,28 @@ void NodeConfiguration::fromRosParam(
             publisherConfig.publishOdom = true;
           }
 
+
+          bool readEnableTfPublisher = impl::check_and_get_param(bodyParameters,
+                                                                 rosparam::keys::EnableTfPublisher, publisherConfig.enableTfPublisher);
+          if (!readEnableTfPublisher)
+          {
+            ROS_WARN_STREAM("Failed to parse " << rosparam::keys::EnableTfPublisher <<
+                            " for body `" << publisherConfig.rigidBodyId << "`. Tf publisher is set default as true .");
+            publisherConfig.publishTf = true;
+          }
+          else
+          {
+            publisherConfig.publishTf = nh.getParam(rosparam::keys::EnableTfPublisher, publisherConfig.enableTfPublisher);
+          }
+
           bool readChildFrameId = impl::check_and_get_param(bodyParameters,
                                   rosparam::keys::ChildFrameId, publisherConfig.childFrameId);
 
           bool readParentFrameId = impl::check_and_get_param(bodyParameters,
                                    rosparam::keys::ParentFrameId, publisherConfig.parentFrameId);
 
-          bool readEnableTfPublisher = rosparam::keys::EnableTfPublisher;
 
-          if (!readChildFrameId || !readParentFrameId || !readEnableTfPublisher)
+          if (!readChildFrameId || !readParentFrameId || !publisherConfig.publishTf)
           { if (!readEnableTfPublisher)
                   ROS_WARN_STREAM("Enable Tf publisher is " << rosparam::keys::EnableTfPublisher <<
                                   " for body `" << publisherConfig.rigidBodyId << "`. TF publishing disabled.");
