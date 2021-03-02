@@ -225,9 +225,7 @@ void NodeConfiguration::fromRosParam(
           }
           else
           {
-            publisherConfig.publishTf = nh.getParam(rosparam::keys::EnableTfPublisher, publisherConfig.enableTfPublisher);
             publisherConfig.publishTf = true;
-
           }
 
           bool readChildFrameId = impl::check_and_get_param(bodyParameters,
