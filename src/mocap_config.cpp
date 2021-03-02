@@ -82,9 +82,10 @@ const std::string RigidBodies = "rigid_bodies";
 const std::string PoseTopicName = "pose";
 const std::string Pose2dTopicName = "pose2d";
 const std::string OdomTopicName = "odom";
-const std::string EnableTfPublisher = "enable_tf_publisher";
+const std::string EnableTfPublisher = "tf";
 const std::string ChildFrameId = "child_frame_id";
 const std::string ParentFrameId = "parent_frame_id";
+
 }  // namespace keys
 }  // namespace rosparam
 
@@ -218,13 +219,15 @@ void NodeConfiguration::fromRosParam(
                                                                  rosparam::keys::EnableTfPublisher, publisherConfig.enableTfPublisher);
           if (!readEnableTfPublisher)
           {
-            ROS_WARN_STREAM("Failed to parse " << rosparam::keys::EnableTfPublisher <<
-                            " for body `" << publisherConfig.rigidBodyId << "`. Tf publisher is set default as true .");
-            publisherConfig.publishTf = true;
+              ROS_WARN_STREAM("Failed to parse " << rosparam::keys::EnableTfPublisher <<
+                              " for body `" << publisherConfig.enableTfPublisher << "`. Tf publishing disabled.");
+            publisherConfig.publishTf = false;
           }
           else
           {
             publisherConfig.publishTf = nh.getParam(rosparam::keys::EnableTfPublisher, publisherConfig.enableTfPublisher);
+            publisherConfig.publishTf = true;
+
           }
 
           bool readChildFrameId = impl::check_and_get_param(bodyParameters,
@@ -233,10 +236,9 @@ void NodeConfiguration::fromRosParam(
           bool readParentFrameId = impl::check_and_get_param(bodyParameters,
                                    rosparam::keys::ParentFrameId, publisherConfig.parentFrameId);
 
-
           if (!readChildFrameId || !readParentFrameId || !publisherConfig.publishTf)
           { if (!readEnableTfPublisher)
-                  ROS_WARN_STREAM("Enable Tf publisher is " << rosparam::keys::EnableTfPublisher <<
+                  ROS_WARN_STREAM("tf is not found in the config" << rosparam::keys::EnableTfPublisher <<
                                   " for body `" << publisherConfig.rigidBodyId << "`. TF publishing disabled.");
             if (!readChildFrameId)
               ROS_WARN_STREAM("Failed to parse " << rosparam::keys::ChildFrameId <<

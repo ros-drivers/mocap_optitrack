@@ -64,9 +64,9 @@ struct PublisherConfiguration
   std::string poseTopicName;
   std::string pose2dTopicName;
   std::string odomTopicName;
+  std::string enableTfPublisher;
   std::string childFrameId;
   std::string parentFrameId;
-  bool enableTfPublisher;
 
   bool publishPose;
   bool publishPose2d;
