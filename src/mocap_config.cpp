@@ -219,12 +219,15 @@ void NodeConfiguration::fromRosParam(
           if (!readEnableTfPublisher)
           {
             ROS_WARN_STREAM("Failed to parse " << rosparam::keys::EnableTfPublisher <<
-                            " for body `" << publisherConfig.rigidBodyId << "`. Tf publisher is set default as true .");
+                            " for body `" << publisherConfig.rigidBodyId << "`. Tf publisher is set default as enabled.");
             publisherConfig.publishTf = true;
           }
           else
           {
             publisherConfig.publishTf = nh.getParam(rosparam::keys::EnableTfPublisher, publisherConfig.enableTfPublisher);
+            ROS_WARN_STREAM("Failed to parse " << rosparam::keys::EnableTfPublisher <<
+                            " for body `" << nh.getParam(rosparam::keys::EnableTfPublisher, publisherConfig.enableTfPublisher) << "`. Tf publisher is set default as enabled.");
+            publisherConfig.publishTf = true;
           }
 
           bool readChildFrameId = impl::check_and_get_param(bodyParameters,
