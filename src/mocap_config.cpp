@@ -85,7 +85,6 @@ const std::string OdomTopicName = "odom";
 const std::string EnableTfPublisher = "tf";
 const std::string ChildFrameId = "child_frame_id";
 const std::string ParentFrameId = "parent_frame_id";
-
 }  // namespace keys
 }  // namespace rosparam
 
@@ -213,7 +212,6 @@ void NodeConfiguration::fromRosParam(
           {
             publisherConfig.publishOdom = true;
           }
-
 
           bool readEnableTfPublisher = impl::check_and_get_param(bodyParameters,
                                                                  rosparam::keys::EnableTfPublisher, publisherConfig.enableTfPublisher);
