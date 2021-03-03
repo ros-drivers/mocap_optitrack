@@ -45,7 +45,7 @@ geometry_msgs::PoseStamped getRosPose(RigidBody const& body, const Version& coor
   if (coordinatesVersion >= Version("2.0"))
   {
     // Motive 2.0+ coordinate system
-    // Motive 2.0+ in the settings of streaming UP Axix should be set to Z Up to match ROS coordinate system
+    // Motive 2.0+ in the settings of streaming `UP Axis` should be set to `Z Up` to match ROS coordinate system
     poseStampedMsg.pose.position.x = body.pose.position.x;
     poseStampedMsg.pose.position.y = body.pose.position.y;
     poseStampedMsg.pose.position.z = body.pose.position.z;
