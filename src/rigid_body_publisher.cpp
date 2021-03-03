@@ -45,13 +45,14 @@ geometry_msgs::PoseStamped getRosPose(RigidBody const& body, const Version& coor
   if (coordinatesVersion >= Version("2.0"))
   {
     // Motive 2.0+ coordinate system
+    // Motive 2.0+ in the settings of streaming UP Axix should be set to Z Up to match ROS coordinate system
     poseStampedMsg.pose.position.x = body.pose.position.x;
-    poseStampedMsg.pose.position.y = body.pose.position.z;
-    poseStampedMsg.pose.position.z = body.pose.position.y;
+    poseStampedMsg.pose.position.y = body.pose.position.y;
+    poseStampedMsg.pose.position.z = body.pose.position.z;
 
     poseStampedMsg.pose.orientation.x = body.pose.orientation.x;
-    poseStampedMsg.pose.orientation.y = body.pose.orientation.z;
-    poseStampedMsg.pose.orientation.z = body.pose.orientation.y;
+    poseStampedMsg.pose.orientation.y = body.pose.orientation.y;
+    poseStampedMsg.pose.orientation.z = body.pose.orientation.z;
     poseStampedMsg.pose.orientation.w = body.pose.orientation.w;
   }
   else if (coordinatesVersion < Version("2.0") && coordinatesVersion >= Version("1.7"))
@@ -86,13 +87,14 @@ nav_msgs::Odometry getRosOdom(RigidBody const& body, const Version& coordinatesV
   if (coordinatesVersion >= Version("2.0"))
   {
     // Motive 2.0+ coordinate system
+    // Motive 2.0+ in the settings of streaming `UP Axis` should be set to `Z Up` to match ROS coordinate system
     OdometryMsg.pose.pose.position.x = body.pose.position.x;
-    OdometryMsg.pose.pose.position.y = body.pose.position.z;
-    OdometryMsg.pose.pose.position.z = body.pose.position.y;
+    OdometryMsg.pose.pose.position.y = body.pose.position.y;
+    OdometryMsg.pose.pose.position.z = body.pose.position.z;
 
     OdometryMsg.pose.pose.orientation.x = body.pose.orientation.x;
-    OdometryMsg.pose.pose.orientation.y = body.pose.orientation.z;
-    OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
+    OdometryMsg.pose.pose.orientation.y = body.pose.orientation.y;
+    OdometryMsg.pose.pose.orientation.z = body.pose.orientation.z;
     OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
   }
   else if (coordinatesVersion < Version("2.0") && coordinatesVersion >= Version("1.7"))
