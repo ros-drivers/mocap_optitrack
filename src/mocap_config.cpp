@@ -214,7 +214,7 @@ void NodeConfiguration::fromRosParam(
           }
 
           bool readEnableTfPublisher = impl::check_and_get_param(bodyParameters,
-                                                                 rosparam::keys::EnableTfPublisher, publisherConfig.enableTfPublisher);
+                               rosparam::keys::EnableTfPublisher, publisherConfig.enableTfPublisher);
           if (!readEnableTfPublisher)
           {
               ROS_WARN_STREAM("Failed to parse " << rosparam::keys::EnableTfPublisher <<
