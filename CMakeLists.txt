@@ -50,3 +50,5 @@ if (CATKIN_ENABLE_TESTING)
   roslint_cpp(${LINT_SRCS})
   roslint_add_test()
 endif()
+
+catkin_python_setup()

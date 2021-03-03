@@ -37,6 +37,11 @@
   <depend>nav_msgs</depend>
   <depend>roscpp</depend>
   <depend>tf</depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>tf2_kdl</depend>
+  <depend>aescape_interfaces</depend>
+  <depend>aescape_python</depend>
 
   <test_depend>roslaunch</test_depend>
   <test_depend>roslint</test_depend>
