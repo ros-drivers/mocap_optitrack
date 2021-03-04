@@ -1,11 +1,11 @@
 rigid_bodies:
-    "OptiTrackLink8":
+    "OptitrackLink8":
         pose: OptiTrackLink8/pose
         pose2d: OptiTrackLink8/ground_pose
         odom: OptiTrackLink8/Odom
         child_frame_id: optitrack_link8
         parent_frame_id: optitrack_world
-    "OptiTrackTeachHandle":
+    "OptitrackTeachHandle":
         pose: OptiTrackTeachHandle/pose
         pose2d: OptiTrackTeachHandle/ground_pose
         odom: OptiTrackTeachHandle/Odom

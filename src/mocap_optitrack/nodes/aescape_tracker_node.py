@@ -25,23 +25,7 @@ class OptitrackTrackerNode:
 
     def run(self):
         rospy.loginfo("Started optitrack tracker node.")
-
-        while not rospy.is_shutdown():
-            optitrack_link8_to_optitrack_teach_handle = (
-                self.tf_helper.get_transform_kdl(
-                    "optitrack_link8", "optitrack_teach_handle", rospy.Time.now()
-                )
-            )
-
-            # # Broadcast the TF as a quaternion
-            # [x, y, z, qx, qy, qz, qw] = self.v.devices[deviceName].get_pose_quaternion()
-            # time = rospy.Time.now()
-
-            # self.broadcaster.sendTransform(
-            #     (x, y, z), (qx, qy, qz, qw), time, publish_name_str, "optitrack_tracker"
-            # )
-
-            self.rate.sleep()
+        rospy.spin()
 
 
 if __name__ == "__main__":
