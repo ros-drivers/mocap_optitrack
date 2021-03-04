@@ -11,14 +11,6 @@
         launch-prefix=""
         output="screen"
         required="true">
-
-  <node pkg="mocap_optitrack"
-        type="aescape_tracker_node.py"
-        name="aescape_optitrack_node"
-        respawn="false"
-        launch-prefix=""
-        output="screen"
-        required="true">
         
     <rosparam file="$(arg mocap_config_file)" command="load" />
   </node>
