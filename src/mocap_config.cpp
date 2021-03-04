@@ -82,6 +82,7 @@ const std::string RigidBodies = "rigid_bodies";
 const std::string PoseTopicName = "pose";
 const std::string Pose2dTopicName = "pose2d";
 const std::string OdomTopicName = "odom";
+const std::string EnableTfPublisher = "tf";
 const std::string ChildFrameId = "child_frame_id";
 const std::string ParentFrameId = "parent_frame_id";
 }  // namespace keys
@@ -212,14 +213,29 @@ void NodeConfiguration::fromRosParam(
             publisherConfig.publishOdom = true;
           }
 
+          bool readEnableTfPublisher = impl::check_and_get_param(bodyParameters,
+                               rosparam::keys::EnableTfPublisher, publisherConfig.enableTfPublisher);
+          if (!readEnableTfPublisher)
+          {
+              ROS_WARN_STREAM("Failed to parse " << rosparam::keys::EnableTfPublisher <<
+                              " for body `" << publisherConfig.enableTfPublisher << "`. Tf publishing disabled.");
+            publisherConfig.publishTf = false;
+          }
+          else
+          {
+            publisherConfig.publishTf = true;
+          }
+
           bool readChildFrameId = impl::check_and_get_param(bodyParameters,
                                   rosparam::keys::ChildFrameId, publisherConfig.childFrameId);
 
           bool readParentFrameId = impl::check_and_get_param(bodyParameters,
                                    rosparam::keys::ParentFrameId, publisherConfig.parentFrameId);
 
-          if (!readChildFrameId || !readParentFrameId)
-          {
+          if (!readChildFrameId || !readParentFrameId || !publisherConfig.publishTf)
+          { if (!readEnableTfPublisher)
+                  ROS_WARN_STREAM("tf is not found in the config" << rosparam::keys::EnableTfPublisher <<
+                                  " for body `" << publisherConfig.rigidBodyId << "`. TF publishing disabled.");
             if (!readChildFrameId)
               ROS_WARN_STREAM("Failed to parse " << rosparam::keys::ChildFrameId <<
                               " for body `" << publisherConfig.rigidBodyId << "`. TF publishing disabled.");
