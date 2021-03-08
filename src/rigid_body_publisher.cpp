@@ -37,211 +37,212 @@
 namespace mocap_optitrack
 {
 
-namespace utilities
-{
-geometry_msgs::PoseStamped getRosPose(RigidBody const& body, const Version& coordinatesVersion)
-{
-  geometry_msgs::PoseStamped poseStampedMsg;
-  if (coordinatesVersion >= Version("2.0"))
+  namespace utilities
   {
-    // Motive 2.0+ coordinate system
-    poseStampedMsg.pose.position.x = body.pose.position.x;
-    poseStampedMsg.pose.position.y = body.pose.position.z;
-    poseStampedMsg.pose.position.z = body.pose.position.y;
-
-    poseStampedMsg.pose.orientation.x = body.pose.orientation.x;
-    poseStampedMsg.pose.orientation.y = body.pose.orientation.z;
-    poseStampedMsg.pose.orientation.z = body.pose.orientation.y;
-    poseStampedMsg.pose.orientation.w = body.pose.orientation.w;
-  }
-  else if (coordinatesVersion < Version("2.0") && coordinatesVersion >= Version("1.7"))
-  {
-    // Motive 1.7+ coordinate system
-    poseStampedMsg.pose.position.x = -body.pose.position.x;
-    poseStampedMsg.pose.position.y = body.pose.position.z;
-    poseStampedMsg.pose.position.z = body.pose.position.y;
-
-    poseStampedMsg.pose.orientation.x = -body.pose.orientation.x;
-    poseStampedMsg.pose.orientation.y = body.pose.orientation.z;
-    poseStampedMsg.pose.orientation.z = body.pose.orientation.y;
-    poseStampedMsg.pose.orientation.w = body.pose.orientation.w;
-  }
-  else
-  {
-    // y & z axes are swapped in the Optitrack coordinate system
-    poseStampedMsg.pose.position.x = body.pose.position.x;
-    poseStampedMsg.pose.position.y = -body.pose.position.z;
-    poseStampedMsg.pose.position.z = body.pose.position.y;
-
-    poseStampedMsg.pose.orientation.x = body.pose.orientation.x;
-    poseStampedMsg.pose.orientation.y = -body.pose.orientation.z;
-    poseStampedMsg.pose.orientation.z = body.pose.orientation.y;
-    poseStampedMsg.pose.orientation.w = body.pose.orientation.w;
-  }
-  return poseStampedMsg;
-}
-nav_msgs::Odometry getRosOdom(RigidBody const& body, const Version& coordinatesVersion)
-{
-  nav_msgs::Odometry OdometryMsg;
-  if (coordinatesVersion >= Version("2.0"))
-  {
-    // Motive 2.0+ coordinate system
-    OdometryMsg.pose.pose.position.x = body.pose.position.x;
-    OdometryMsg.pose.pose.position.y = body.pose.position.z;
-    OdometryMsg.pose.pose.position.z = body.pose.position.y;
-
-    OdometryMsg.pose.pose.orientation.x = body.pose.orientation.x;
-    OdometryMsg.pose.pose.orientation.y = body.pose.orientation.z;
-    OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
-    OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
-  }
-  else if (coordinatesVersion < Version("2.0") && coordinatesVersion >= Version("1.7"))
-  {
-    // Motive 1.7+ coordinate system
-    OdometryMsg.pose.pose.position.x = -body.pose.position.x;
-    OdometryMsg.pose.pose.position.y = body.pose.position.z;
-    OdometryMsg.pose.pose.position.z = body.pose.position.y;
-
-    OdometryMsg.pose.pose.orientation.x = -body.pose.orientation.x;
-    OdometryMsg.pose.pose.orientation.y = body.pose.orientation.z;
-    OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
-    OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
-  }
-  else
-  {
-    // y & z axes are swapped in the Optitrack coordinate system
-    OdometryMsg.pose.pose.position.x = body.pose.position.x;
-    OdometryMsg.pose.pose.position.y = -body.pose.position.z;
-    OdometryMsg.pose.pose.position.z = body.pose.position.y;
-
-    OdometryMsg.pose.pose.orientation.x = body.pose.orientation.x;
-    OdometryMsg.pose.pose.orientation.y = -body.pose.orientation.z;
-    OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
-    OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
-  }
-  return OdometryMsg;
-}
-}  // namespace utilities
-
-RigidBodyPublisher::RigidBodyPublisher(ros::NodeHandle &nh,
-                                       Version const& natNetVersion,
-                                       PublisherConfiguration const& config) :
-  config(config)
-{
-  if (config.publishPose)
-    posePublisher = nh.advertise<geometry_msgs::PoseStamped>(config.poseTopicName, 1000);
-
-  if (config.publishPose2d)
-    pose2dPublisher = nh.advertise<geometry_msgs::Pose2D>(config.pose2dTopicName, 1000);
-
-  if (config.publishOdom)
-    odomPublisher = nh.advertise<nav_msgs::Odometry>(config.odomTopicName, 1000);
-
-  // Motive 1.7+ uses a new coordinate system
-  // natNetVersion = (natNetVersion >= Version("1.7"));
-  coordinatesVersion = natNetVersion;
-}
-
-RigidBodyPublisher::~RigidBodyPublisher()
-{
-}
-
-void RigidBodyPublisher::publish(ros::Time const& time, RigidBody const& body)
-{
-  // don't do anything if no new data was provided
-  if (!body.hasValidData())
-  {
-    return;
-  }
-
-  // NaN?
-  if (body.pose.position.x != body.pose.position.x)
-  {
-    return;
-  }
-
-  geometry_msgs::PoseStamped pose = utilities::getRosPose(body, coordinatesVersion);
-  nav_msgs::Odometry odom =  utilities::getRosOdom(body, coordinatesVersion);
-
-  pose.header.stamp = time;
-  odom.header.stamp = time;
-
-  if (config.publishPose)
-  {
-    pose.header.frame_id = config.parentFrameId;
-    posePublisher.publish(pose);
-  }
-
-  tf::Quaternion q(pose.pose.orientation.x,
-                   pose.pose.orientation.y,
-                   pose.pose.orientation.z,
-                   pose.pose.orientation.w);
-
-  if (config.publishOdom)
-  {
-    odom.header.frame_id = config.parentFrameId;
-    odom.child_frame_id = config.childFrameId;
-    odomPublisher.publish(odom);
-  }
-  if (config.publishOdom)
-  {
-    odom.header.frame_id = config.parentFrameId;
-    odom.child_frame_id = config.childFrameId;
-    odomPublisher.publish(odom);
-  }
-  // publish 2D pose
-  if (config.publishPose2d)
-  {
-    geometry_msgs::Pose2D pose2d;
-    pose2d.x = pose.pose.position.x;
-    pose2d.y = pose.pose.position.y;
-    pose2d.theta = tf::getYaw(q);
-    pose2dPublisher.publish(pose2d);
-  }
-
-  if (config.publishTf)
-  {
-    // publish transform
-    tf::Transform transform;
-    transform.setOrigin(tf::Vector3(pose.pose.position.x,
-                                    pose.pose.position.y,
-                                    pose.pose.position.z));
-
-    // Handle different coordinate systems (Arena vs. rviz)
-    transform.setRotation(q);
-    tfPublisher.sendTransform(tf::StampedTransform(transform,
-                              time,
-                              config.parentFrameId,
-                              config.childFrameId));
-  }
-}
-
-
-RigidBodyPublishDispatcher::RigidBodyPublishDispatcher(
-  ros::NodeHandle &nh,
-  Version const& natNetVersion,
-  PublisherConfigurations const& configs)
-{
-  for (auto const& config : configs)
-  {
-    rigidBodyPublisherMap[config.rigidBodyId] =
-      RigidBodyPublisherPtr(new RigidBodyPublisher(nh, natNetVersion, config));
-  }
-}
-
-void RigidBodyPublishDispatcher::publish(
-  ros::Time const& time,
-  std::vector<RigidBody> const& rigidBodies)
-{
-  for (auto const& rigidBody : rigidBodies)
-  {
-    auto const& iter = rigidBodyPublisherMap.find(rigidBody.bodyId);
-
-    if (iter != rigidBodyPublisherMap.end())
+    geometry_msgs::PoseStamped getRosPose(RigidBody const &body, const Version &coordinatesVersion)
     {
-      (*iter->second).publish(time, rigidBody);
+      geometry_msgs::PoseStamped poseStampedMsg;
+      if (coordinatesVersion >= Version("2.0"))
+      {
+        // Motive 2.0+ coordinate system
+        poseStampedMsg.pose.position.x = body.pose.position.x;
+        poseStampedMsg.pose.position.y = -body.pose.position.z;
+        poseStampedMsg.pose.position.z = body.pose.position.y;
+
+        poseStampedMsg.pose.orientation.x = body.pose.orientation.x;
+        poseStampedMsg.pose.orientation.y = -body.pose.orientation.z;
+        poseStampedMsg.pose.orientation.z = body.pose.orientation.y;
+        poseStampedMsg.pose.orientation.w = body.pose.orientation.w;
+      }
+      else if (coordinatesVersion < Version("2.0") && coordinatesVersion >= Version("1.7"))
+      {
+        // Motive 1.7+ coordinate system
+        poseStampedMsg.pose.position.x = -body.pose.position.x;
+        poseStampedMsg.pose.position.y = body.pose.position.z;
+        poseStampedMsg.pose.position.z = body.pose.position.y;
+
+        poseStampedMsg.pose.orientation.x = -body.pose.orientation.x;
+        poseStampedMsg.pose.orientation.y = body.pose.orientation.z;
+        poseStampedMsg.pose.orientation.z = body.pose.orientation.y;
+        poseStampedMsg.pose.orientation.w = body.pose.orientation.w;
+      }
+      else
+      {
+        // y & z axes are swapped in the Optitrack coordinate system
+        poseStampedMsg.pose.position.x = body.pose.position.x;
+        poseStampedMsg.pose.position.y = -body.pose.position.z;
+        poseStampedMsg.pose.position.z = body.pose.position.y;
+
+        poseStampedMsg.pose.orientation.x = body.pose.orientation.x;
+        poseStampedMsg.pose.orientation.y = -body.pose.orientation.z;
+        poseStampedMsg.pose.orientation.z = body.pose.orientation.y;
+        poseStampedMsg.pose.orientation.w = body.pose.orientation.w;
+      }
+      return poseStampedMsg;
+    }
+    nav_msgs::Odometry getRosOdom(RigidBody const &body, const Version &coordinatesVersion)
+    {
+      nav_msgs::Odometry OdometryMsg;
+      if (coordinatesVersion >= Version("2.0"))
+      {
+        // Motive 2.0+ coordinate system
+        OdometryMsg.pose.pose.position.x = body.pose.position.x;
+        OdometryMsg.pose.pose.position.y = body.pose.position.z;
+        OdometryMsg.pose.pose.position.z = body.pose.position.y;
+
+        OdometryMsg.pose.pose.orientation.x = body.pose.orientation.x;
+        OdometryMsg.pose.pose.orientation.y = body.pose.orientation.z;
+        OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
+        OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
+      }
+      else if (coordinatesVersion < Version("2.0") && coordinatesVersion >= Version("1.7"))
+      {
+        // Motive 1.7+ coordinate system
+        OdometryMsg.pose.pose.position.x = -body.pose.position.x;
+        OdometryMsg.pose.pose.position.y = body.pose.position.z;
+        OdometryMsg.pose.pose.position.z = body.pose.position.y;
+
+        OdometryMsg.pose.pose.orientation.x = -body.pose.orientation.x;
+        OdometryMsg.pose.pose.orientation.y = body.pose.orientation.z;
+        OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
+        OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
+      }
+      else
+      {
+        // y & z axes are swapped in the Optitrack coordinate system
+        OdometryMsg.pose.pose.position.x = body.pose.position.x;
+        OdometryMsg.pose.pose.position.y = -body.pose.position.z;
+        OdometryMsg.pose.pose.position.z = body.pose.position.y;
+
+        OdometryMsg.pose.pose.orientation.x = body.pose.orientation.x;
+        OdometryMsg.pose.pose.orientation.y = -body.pose.orientation.z;
+        OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
+        OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
+      }
+      return OdometryMsg;
+    }
+  } // namespace utilities
+
+  RigidBodyPublisher::RigidBodyPublisher(ros::NodeHandle &nh,
+                                         Version const &natNetVersion,
+                                         PublisherConfiguration const &config) : config(config)
+  {
+    if (config.publishPose)
+      posePublisher = nh.advertise<geometry_msgs::PoseStamped>(config.poseTopicName, 1000);
+
+    if (config.publishPose2d)
+      pose2dPublisher = nh.advertise<geometry_msgs::Pose2D>(config.pose2dTopicName, 1000);
+
+    if (config.publishOdom)
+      odomPublisher = nh.advertise<nav_msgs::Odometry>(config.odomTopicName, 1000);
+
+    // Motive 1.7+ uses a new coordinate system
+    // natNetVersion = (natNetVersion >= Version("1.7"));
+    coordinatesVersion = natNetVersion;
+  }
+
+  RigidBodyPublisher::~RigidBodyPublisher()
+  {
+  }
+
+  void RigidBodyPublisher::publish(ros::Time const &time, RigidBody const &body)
+  {
+    // don't do anything if no new data was provided
+    if (!body.hasValidData())
+    {
+      return;
+    }
+
+    // NaN?
+    if (body.pose.position.x != body.pose.position.x)
+    {
+      return;
+    }
+
+    geometry_msgs::PoseStamped pose = utilities::getRosPose(body, coordinatesVersion);
+    nav_msgs::Odometry odom = utilities::getRosOdom(body, coordinatesVersion);
+
+    pose.header.stamp = time;
+    odom.header.stamp = time;
+
+    if (config.publishPose)
+    {
+
+      pose.header.frame_id = config.parentFrameId;
+      posePublisher.publish(pose);
+    }
+
+    tf::Quaternion q(pose.pose.orientation.x,
+                     pose.pose.orientation.y,
+                     pose.pose.orientation.z,
+                     pose.pose.orientation.w);
+
+    if (config.publishOdom)
+    {
+      odom.header.frame_id = config.parentFrameId;
+      odom.child_frame_id = config.childFrameId;
+      odomPublisher.publish(odom);
+    }
+    if (config.publishOdom)
+    {
+      odom.header.frame_id = config.parentFrameId;
+      odom.child_frame_id = config.childFrameId;
+      odomPublisher.publish(odom);
+    }
+    // publish 2D pose
+    if (config.publishPose2d)
+    {
+      geometry_msgs::Pose2D pose2d;
+      pose2d.x = pose.pose.position.x;
+      pose2d.y = pose.pose.position.y;
+      pose2d.theta = tf::getYaw(q);
+      pose2dPublisher.publish(pose2d);
+    }
+
+    if (config.publishTf)
+    {
+      // ROS_INFO("publish tf, %s:%s", config.parentFrameId.c_str(), config.childFrameId.c_str());
+
+      // publish transform
+      tf::Transform transform;
+      transform.setOrigin(tf::Vector3(pose.pose.position.x,
+                                      pose.pose.position.y,
+                                      pose.pose.position.z));
+
+      // Handle different coordinate systems (Arena vs. rviz)
+      transform.setRotation(q);
+      tfPublisher.sendTransform(tf::StampedTransform(transform,
+                                                     time,
+                                                     config.parentFrameId,
+                                                     config.childFrameId));
     }
   }
-}
 
-}  // namespace mocap_optitrack
+  RigidBodyPublishDispatcher::RigidBodyPublishDispatcher(
+      ros::NodeHandle &nh,
+      Version const &natNetVersion,
+      PublisherConfigurations const &configs)
+  {
+    for (auto const &config : configs)
+    {
+      rigidBodyPublisherMap[config.rigidBodyId] =
+          RigidBodyPublisherPtr(new RigidBodyPublisher(nh, natNetVersion, config));
+    }
+  }
+
+  void RigidBodyPublishDispatcher::publish(
+      ros::Time const &time,
+      std::vector<RigidBody> const &rigidBodies)
+  {
+    for (auto const &rigidBody : rigidBodies)
+    {
+      auto const &iter = rigidBodyPublisherMap.find(rigidBody.bodyId);
+
+      if (iter != rigidBodyPublisherMap.end())
+      {
+        (*iter->second).publish(time, rigidBody);
+      }
+    }
+  }
+
+} // namespace mocap_optitrack
