@@ -2,8 +2,8 @@
 Changelog for package mocap_optitrack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.1 (2021-03-08)
+------------------
 * Fix/coordinate system motive 2.0 (`#56 <https://github.com/ros-drivers/mocap_optitrack/issues/56>`_)
   * fix: coordinate system for motive 2.0+
   * typo
