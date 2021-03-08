@@ -2,6 +2,24 @@
 Changelog for package mocap_optitrack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix/coordinate system motive 2.0 (`#56 <https://github.com/ros-drivers/mocap_optitrack/issues/56>`_)
+  * fix: coordinate system for motive 2.0+
+  * typo
+  * fix: coordiante system for versions > motive 2.0
+  Co-authored-by: jad <jad.hajmustafa@eurogroep.com>
+* Feat: add enable disable tf publisher param (`#55 <https://github.com/ros-drivers/mocap_optitrack/issues/55>`_)
+  * feat: enable tf publisher param
+  * fix: default value of enable_tf_publisher
+  * feat: add-enable-disable param for tf publisher
+  * feat: add tf topic to enable/disable tf publisher
+  * remove unnecessary changes
+  * fix: lint
+  Co-authored-by: jad <jad.hajmustafa@eurogroep.com>
+* Added Noetic to CI.
+* Contributors: Tony Baltovski, jadhm
+
 0.1.0 (2021-02-24)
 ------------------
 * Reset package version.
