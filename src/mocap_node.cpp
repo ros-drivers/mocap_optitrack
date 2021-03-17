@@ -129,9 +129,8 @@ public:
           // If we processed some data, take a short break
           usleep(10);
         }
-      }
+      }else {ros::Duration(1.).sleep();}
       ros::spinOnce();
-      ros::Duration(1.).sleep();
     }
   }
 
