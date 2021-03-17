@@ -131,6 +131,7 @@ public:
         }
       }
       ros::spinOnce();
+      ros::Duration(1.).sleep();
     }
   }
 
