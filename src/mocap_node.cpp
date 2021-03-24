@@ -130,6 +130,10 @@ public:
           usleep(10);
         }
       }
+      else
+      {
+        ros::Duration(1.).sleep();
+      }
       ros::spinOnce();
     }
   }
