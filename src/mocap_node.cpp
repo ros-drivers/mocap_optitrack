@@ -93,6 +93,8 @@ public:
                     connectionRequestMsgBuffer.size(),
                     serverDescription.commandPort);
         if (updateDataModelFromServer()) usleep(10);
+        else sleep(1);
+
         ros::spinOnce();
       }
       // Once we have the server info, create publishers
@@ -125,10 +127,9 @@ public:
 
           // Clear out the model to prepare for the next frame of data
           dataModel.clear();
-
-          // If we processed some data, take a short break
-          usleep(10);
         }
+        // whether receive or nor, give a short break to relieft the CPU load due to while()
+        usleep(100);
       }
       else
       {
