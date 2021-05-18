@@ -2,8 +2,8 @@
 Changelog for package mocap_optitrack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.3 (2021-05-18)
+------------------
 * Add sleep function to avoid the high load of while() function
 * Contributors: Moju Zhao
 
