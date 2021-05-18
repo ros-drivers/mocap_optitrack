@@ -2,6 +2,11 @@
 Changelog for package mocap_optitrack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add sleep function to avoid the high load of while() function
+* Contributors: Moju Zhao
+
 0.1.2 (2021-03-24)
 ------------------
 * Fix/infinit fast reconnect loop (`#58 <https://github.com/ros-drivers/mocap_optitrack/issues/58>`_)
