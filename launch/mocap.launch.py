@@ -40,8 +40,8 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='mocap_optitrack',
-            node_executable='mocap_node',
-            node_name='mocap_node',
+            executable='mocap_node',
+            name='mocap_node',
             parameters=[
                 os.path.join(get_package_share_directory('mocap_optitrack'), 'config', 'mocap.yaml')
             ],
