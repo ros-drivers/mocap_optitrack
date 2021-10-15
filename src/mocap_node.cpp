@@ -153,7 +153,7 @@ int main( int argc, char* argv[] )
 {
   // Initialize ROS2 node
   rclcpp::init(argc, argv);
-  rclcpp::Node::SharedPtr rclcpp_node = std::make_shared<rclcpp::Node>("mocap_node");
+  rclcpp::Node::SharedPtr rclcpp_node = std::make_shared<rclcpp::Node>("mocap_node", rclcpp::NodeOptions().allow_undeclared_parameters(true).automatically_declare_parameters_from_overrides(true));
   
   // Grab node configuration from rosparam
   mocap_optitrack::ServerDescription serverDescription;
