@@ -455,6 +455,12 @@ void DataFrameMessage::deserialize(
   }
   RCLCPP_DEBUG(logger, "Timestamp: %3.3f", timestamp);
 
+  // Loop over rigid bodies to add optitrack timestamp
+  for (auto& rigidBody : dataFrame->rigidBodies)
+  {
+    rigidBody.trackTimestamp = timestamp;
+  }
+
   // high res timestamps (version 3.0 and later)
   if (NatNetVersion >= mocap_optitrack::Version("3.0"))
   {

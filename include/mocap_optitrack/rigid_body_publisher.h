@@ -56,12 +56,14 @@ public:
     Version const& natNetVersion, 
     PublisherConfiguration const& config);
   ~RigidBodyPublisher();
-  void publish(rclcpp::Time const& time, RigidBody const&);
+  void publish(rclcpp::Time const& time, RigidBody const&, rclcpp::Logger);
 
 private:
   PublisherConfiguration config;
 
   bool useNewCoordinates;
+
+  double timeDifference;	//For syncing optitrack clock to ROS clock
 
   tf2_ros::TransformBroadcaster tfPublisher;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr posePublisher;
@@ -79,7 +81,7 @@ public:
     RigidBodyPublishDispatcher(rclcpp::Node::SharedPtr &node, 
         Version const& natNetVersion, 
         PublisherConfigurations const& configs);
-    void publish(rclcpp::Time const& time, std::vector<RigidBody> const& rigidBodies);
+    void publish(rclcpp::Time const& time, std::vector<RigidBody> const& rigidBodies, rclcpp::Logger logger);
 };
 
 } // namespace
