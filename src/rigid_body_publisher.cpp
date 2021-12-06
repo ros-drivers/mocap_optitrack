@@ -90,7 +90,7 @@ RigidBodyPublisher::~RigidBodyPublisher()
 
 }
 
-void RigidBodyPublisher::publish(rclcpp::Time const& time, RigidBody const& body)
+void RigidBodyPublisher::publish(rclcpp::Time const& time, RigidBody const& body, rclcpp::Logger logger)
 {
   // don't do anything if no new data was provided
   if (!body.hasValidData())
@@ -105,7 +105,25 @@ void RigidBodyPublisher::publish(rclcpp::Time const& time, RigidBody const& body
   }
 
   geometry_msgs::msg::PoseStamped pose = utilities::getRosPose(body, useNewCoordinates);
-  pose.header.stamp = time;
+
+  double curTimeDifference = time.seconds() - body.trackTimestamp;
+
+  // If timeDifference is 0 it has not yet been set
+  if (timeDifference == 0){
+    RCLCPP_INFO(logger, "Initial clock sync: %.0f seconds", curTimeDifference);
+    timeDifference = curTimeDifference;
+  }
+
+  // Clock sync can be improved if the current timeDifference is the lowest seen
+  if (curTimeDifference < timeDifference){
+    RCLCPP_INFO(logger, "Improving clock sync by %.5f seconds", timeDifference - curTimeDifference);
+    timeDifference = curTimeDifference;
+  }
+
+  // Calculate correct timestamp using time difference
+  double corStamp = body.trackTimestamp + timeDifference;
+
+  pose.header.stamp = rclcpp::Time((int)corStamp, (corStamp-floor(corStamp)) * 1000000000 );
 
   if (config.publishPose)
   {
@@ -158,7 +176,9 @@ RigidBodyPublishDispatcher::RigidBodyPublishDispatcher(
 
 void RigidBodyPublishDispatcher::publish(
   rclcpp::Time const& time, 
-  std::vector<RigidBody> const& rigidBodies)
+  std::vector<RigidBody> const& rigidBodies,
+  rclcpp::Logger logger
+  )
 {
   for (auto const& rigidBody : rigidBodies)
   {
@@ -166,7 +186,7 @@ void RigidBodyPublishDispatcher::publish(
 
     if (iter != rigidBodyPublisherMap.end())
     {
-      (*iter->second).publish(time, rigidBody);
+      (*iter->second).publish(time, rigidBody, logger);
     }
   }
 }
