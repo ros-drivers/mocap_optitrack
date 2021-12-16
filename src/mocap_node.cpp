@@ -52,7 +52,9 @@ public:
                      PublisherConfigurations const& pubConfigs) :
     nh(nh)
   {
-    server.setCallback(boost::bind(&OptiTrackRosBridge::reconfigureCallback, this, _1, _2));
+    reconfigure_server =
+            std::shared_ptr<ReconfigureServer>(new ReconfigureServer(ros::NodeHandle("~/optitrack_config")));
+    reconfigure_server->setCallback(boost::bind(&OptiTrackRosBridge::reconfigureCallback, this, _1, _2));
     serverDescription = serverDescr;
     publisherConfigurations = pubConfigs;
   }
@@ -165,7 +167,9 @@ private:
   DataModel dataModel;
   std::unique_ptr<UdpMulticastSocket> multicastClientSocketPtr;
   std::unique_ptr<RigidBodyPublishDispatcher> publishDispatcherPtr;
-  dynamic_reconfigure::Server<MocapOptitrackConfig> server;
+  typedef dynamic_reconfigure::Server<MocapOptitrackConfig> ReconfigureServer;
+  std::shared_ptr<ReconfigureServer> reconfigure_server;
+
   bool initialized;
 };
 
