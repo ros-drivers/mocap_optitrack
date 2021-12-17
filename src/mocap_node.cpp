@@ -169,7 +169,6 @@ private:
   std::unique_ptr<RigidBodyPublishDispatcher> publishDispatcherPtr;
   typedef dynamic_reconfigure::Server<MocapOptitrackConfig> ReconfigureServer;
   std::shared_ptr<ReconfigureServer> server;
-
   bool initialized;
 };
 
