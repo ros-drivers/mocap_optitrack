@@ -50,7 +50,7 @@ public:
   OptiTrackRosBridge(ros::NodeHandle& nh,
                      ServerDescription const& serverDescr,
                      PublisherConfigurations const& pubConfigs) :
-    nh(nh)
+    nh(nh), server(ros::NodeHandle("~/optitrack_config"))
   {
     server.setCallback(boost::bind(&OptiTrackRosBridge::reconfigureCallback, this, _1, _2));
     serverDescription = serverDescr;
