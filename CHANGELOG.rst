@@ -2,6 +2,14 @@
 Changelog for package mocap_optitrack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* initialize the  dynamic server in the initializer list
+* white space
+* unnecessary changes
+* fix: params namespace
+* Contributors: Jad
+
 0.1.3 (2021-05-18)
 ------------------
 * Add sleep function to avoid the high load of while() function
