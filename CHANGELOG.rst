@@ -2,8 +2,8 @@
 Changelog for package mocap_optitrack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.4 (2022-01-18)
+------------------
 * initialize the  dynamic server in the initializer list
 * white space
 * unnecessary changes
