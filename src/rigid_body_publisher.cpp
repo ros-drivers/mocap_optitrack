@@ -45,13 +45,13 @@ namespace utilities
     if (newCoordinates)
     {
       // Motive 1.7+ coordinate system
-      poseStampedMsg.pose.position.x = -body.pose.position.x;
-      poseStampedMsg.pose.position.y = body.pose.position.z;
-      poseStampedMsg.pose.position.z = body.pose.position.y;
+      poseStampedMsg.pose.position.x = body.pose.position.x;
+      poseStampedMsg.pose.position.y = body.pose.position.y;
+      poseStampedMsg.pose.position.z = body.pose.position.z;
   
-      poseStampedMsg.pose.orientation.x = -body.pose.orientation.x;
-      poseStampedMsg.pose.orientation.y = body.pose.orientation.z;
-      poseStampedMsg.pose.orientation.z = body.pose.orientation.y;
+      poseStampedMsg.pose.orientation.x = body.pose.orientation.x;
+      poseStampedMsg.pose.orientation.y = body.pose.orientation.y;
+      poseStampedMsg.pose.orientation.z = body.pose.orientation.z;
       poseStampedMsg.pose.orientation.w = body.pose.orientation.w;
     }
     else
