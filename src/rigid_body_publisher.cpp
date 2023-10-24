@@ -116,7 +116,6 @@ RigidBodyPublisher::RigidBodyPublisher(rclcpp::Node::SharedPtr &node,
   if (config.publishOdom)
     odomPublisher = node->create_publisher<nav_msgs::msg::Odometry>(config.odomTopicName, 1000);
 
-
   // Motive 1.7+ uses a new coordinate system
   // natNetVersion = (natNetVersion >= Version("1.7"));
   coordinatesVersion = natNetVersion;
