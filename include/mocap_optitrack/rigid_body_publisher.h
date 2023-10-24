@@ -40,6 +40,7 @@
 
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/pose2_d.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 
 #include <mocap_optitrack/version.h>
 #include <mocap_optitrack/data_model.h>
@@ -61,13 +62,14 @@ public:
 private:
   PublisherConfiguration config;
 
-  bool useNewCoordinates;
+  Version coordinatesVersion;
 
   double timeDifference;	//For syncing optitrack clock to ROS clock
 
   tf2_ros::TransformBroadcaster tfPublisher;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr posePublisher;
   rclcpp::Publisher<geometry_msgs::msg::Pose2D>::SharedPtr pose2dPublisher;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odomPublisher;
 };
 
 /// \brief Dispatches RigidBody data to the correct publisher.
