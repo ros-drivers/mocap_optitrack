@@ -37,6 +37,7 @@ namespace mocap_optitrack
 const int ServerDescription::Default::CommandPort = 1511;
 const int ServerDescription::Default::DataPort   = 9001;
 const std::string ServerDescription::Default::MulticastIpAddress = "224.0.0.251";
+const bool ServerDescription::Default::EnableOptitrack = true;
 
 // Param keys
 namespace rosparam
@@ -46,10 +47,13 @@ namespace rosparam
     const std::string MulticastIpAddress = "optitrack_config.multicast_address";
     const std::string CommandPort = "optitrack_config.command_port";
     const std::string DataPort = "optitrack_config.data_port";
+    const std::string EnableOptitrack = "optitrack_config/enable_optitrack";
     const std::string Version = "optitrack_config.version";
     const std::string RigidBodies = "rigid_bodies";
     const std::string PoseTopicName = "pose";
     const std::string Pose2dTopicName = "pose2d";
+    const std::string OdomTopicName = "odom";
+    const std::string EnableTfPublisher = "tf";
     const std::string ChildFrameId = "child_frame_id";
     const std::string ParentFrameId = "parent_frame_id";
   }
@@ -85,7 +89,16 @@ void NodeConfiguration::fromRosParam(
     RCLCPP_WARN(node->get_logger(), 
       "Could not get command port, using default: %i", serverDescription.commandPort);
   }
-  
+
+  if(!node->get_parameter_or(
+    rosparam::keys::EnableOptitrack,
+    serverDescription.enableOptitrack,
+    ServerDescription::Default::EnableOptitrack)
+  ) {
+    RCLCPP_WARN(node->get_logger(),
+                "Could not get enable optitrack, using default: %d", serverDescription.enableOptitrack);
+  }
+
   if(!node->get_parameter_or(
     rosparam::keys::DataPort, 
     serverDescription.dataPort, 
@@ -149,7 +162,33 @@ void NodeConfiguration::fromRosParam(
       publisherConfig.publishPose2d = true;
     }
   
+    const bool readOdomTopicName =  node->get_parameter(prefix + "." + rosparam::keys::OdomTopicName,
+                                                       publisherConfig.odomTopicName);
 
+    if (!readOdomTopicName)
+    {
+      RCLCPP_WARN(node->get_logger(), "Failed to parse %s for body %d. Odom publishing disabled.",
+                  rosparam::keys::OdomTopicName.c_str(), publisherConfig.rigidBodyId);
+      publisherConfig.publishOdom = false;
+    }
+    else
+    {
+      publisherConfig.publishOdom = true;
+    }
+
+    const bool readEnableTfPublisher =  node->get_parameter(prefix + "." + rosparam::keys::EnableTfPublisher,
+                                                           publisherConfig.enableTfPublisher);
+
+    if (!readEnableTfPublisher)
+    {
+      RCLCPP_WARN(node->get_logger(), "Failed to parse %s for body %d. TF publishing disabled.",
+                  rosparam::keys::EnableTfPublisher.c_str(), publisherConfig.rigidBodyId);
+      publisherConfig.publishTf = false;
+    }
+    else
+    {
+      publisherConfig.publishTf = true;
+    }
 
     const bool readChildFrameId = node->get_parameter(
       prefix + "." + rosparam::keys::ChildFrameId, publisherConfig.childFrameId);

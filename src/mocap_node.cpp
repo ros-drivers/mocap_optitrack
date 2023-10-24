@@ -58,61 +58,69 @@ namespace mocap_optitrack
 
     void initialize()
     {
-      // Create socket
-      multicastClientSocketPtr.reset(
-        new UdpMulticastSocket(
-          node,
-          serverDescription.dataPort, 
-          serverDescription.multicastIpAddress)); 
-
-      if (!serverDescription.version.empty())
+      if (serverDescription.enableOptitrack)
       {
-        dataModel.setVersions(&serverDescription.version[0], &serverDescription.version[0]);
-      }
+        // Create socket
+        multicastClientSocketPtr.reset(
+            new UdpMulticastSocket(node, serverDescription.dataPort, serverDescription.multicastIpAddress));
 
-      // Need verion information from the server to properly decode any of their packets.
-      // If we have not recieved that yet, send another request.  
-      while(rclcpp::ok() && !dataModel.hasServerInfo())
-      {
-        natnet::ConnectionRequestMessage connectionRequestMsg;
-        natnet::MessageBuffer connectionRequestMsgBuffer;
-        connectionRequestMsg.serialize(connectionRequestMsgBuffer, NULL);
-        int ret = multicastClientSocketPtr->send(
-          &connectionRequestMsgBuffer[0], 
-          connectionRequestMsgBuffer.size(), 
-          serverDescription.commandPort);
-        // TODO : need to know about sleep rule
-        if (updateDataModelFromServer()) {
+        if (!serverDescription.version.empty())
+        {
+          dataModel.setVersions(&serverDescription.version[0], &serverDescription.version[0]);
         }
-        usleep(10);
+
+        // Need verion information from the server to properly decode any of their packets.
+        // If we have not recieved that yet, send another request.
+        while (rclcpp::ok() && !dataModel.hasServerInfo())
+        {
+          natnet::ConnectionRequestMessage connectionRequestMsg;
+          natnet::MessageBuffer connectionRequestMsgBuffer;
+          connectionRequestMsg.serialize(connectionRequestMsgBuffer, NULL);
+          int ret = multicastClientSocketPtr->send(&connectionRequestMsgBuffer[0], connectionRequestMsgBuffer.size(),
+                                                   serverDescription.commandPort);
+          if (updateDataModelFromServer()) usleep(10);
+          else sleep(1);
+
+          spin_some(node);
+        }
+        // Once we have the server info, create publishers
+        publishDispatcherPtr.reset(
+            new RigidBodyPublishDispatcher(node, dataModel.getNatNetVersion(), publisherConfigurations));
+        RCLCPP_INFO(node->get_logger(), "Initialization complete");
+        initialized = true;
       }
-
-      // Once we have the server info, create publishers
-      publishDispatcherPtr.reset(
-        new RigidBodyPublishDispatcher(node, 
-          dataModel.getNatNetVersion(), 
-          publisherConfigurations));
-
-      RCLCPP_INFO(node->get_logger(), "Initialization complete");
+      else
+      {
+        RCLCPP_INFO(node->get_logger(), "Initialization incomplete");
+        initialized = false;
+      }
     };
 
     void run()
     {
       while (rclcpp::ok())
       {
-        if (updateDataModelFromServer())
+        if (initialized)
         {
-          // Maybe we got some data? If we did it would be in the form of one or more
-          // rigid bodies in the data model
-          const rclcpp::Time time = clock->now();
-          publishDispatcherPtr->publish(time, dataModel.dataFrame.rigidBodies, node->get_logger());
+          if (updateDataModelFromServer())
+          {
+            // Maybe we got some data? If we did it would be in the form of one or more
+            // rigid bodies in the data model
+            const rclcpp::Time time = clock->now();
+            publishDispatcherPtr->publish(time, dataModel.dataFrame.rigidBodies, node->get_logger());
 
-          // Clear out the model to prepare for the next frame of data
-          dataModel.clear();
-
-          // If we processed some data, take a short break
-          usleep( 10 );
+            // Clear out the model to prepare for the next frame of data
+            dataModel.clear();
+          }
+            // If we processed some data, take a short break
+            usleep(100);
         }
+        else
+        {
+            rclcpp::sleep_for(std::chrono::seconds(1));
+        }
+        // whether receive or nor, give a short break to relieft the CPU load due to while()
+        spin_some(node);
       }
     }
 
@@ -143,6 +151,7 @@ namespace mocap_optitrack
     DataModel dataModel;
     std::unique_ptr<UdpMulticastSocket> multicastClientSocketPtr;
     std::unique_ptr<RigidBodyPublishDispatcher> publishDispatcherPtr;
+    bool initialized = false;
   };
 
 } // namespace

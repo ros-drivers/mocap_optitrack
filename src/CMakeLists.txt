@@ -13,6 +13,7 @@ add_executable(${PROJECT_NAME}_mocap_node
 target_link_libraries(${PROJECT_NAME}_mocap_node 
   ${rclcpp_LIBRARIES}
   ${geometry_msgs_LIBRARIES}
+  ${nav_msgs_LIBRARIES}
   ${tf2_ros_LIBRARIES})
 
 set_target_properties(${PROJECT_NAME}_mocap_node PROPERTIES
