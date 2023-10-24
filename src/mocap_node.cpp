@@ -101,7 +101,7 @@ namespace mocap_optitrack
     {
       while (rclcpp::ok())
       {
-        if (initialized)
+        if (initialized && serverDescription.enableOptitrack)
         {
           if (updateDataModelFromServer())
           {
