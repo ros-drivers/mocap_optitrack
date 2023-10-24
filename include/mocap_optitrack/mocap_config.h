@@ -37,6 +37,25 @@
 
 namespace mocap_optitrack
 {
+// Param keys
+namespace rosparam
+{
+  namespace keys
+  {
+    const std::string MulticastIpAddress = "optitrack_config.multicast_address";
+    const std::string CommandPort = "optitrack_config.command_port";
+    const std::string DataPort = "optitrack_config.data_port";
+    const std::string EnableOptitrack = "optitrack_config.enable_optitrack";
+    const std::string Version = "optitrack_config.version";
+    const std::string RigidBodies = "rigid_bodies";
+    const std::string PoseTopicName = "pose";
+    const std::string Pose2dTopicName = "pose2d";
+    const std::string OdomTopicName = "odom";
+    const std::string EnableTfPublisher = "tf";
+    const std::string ChildFrameId = "child_frame_id";
+    const std::string ParentFrameId = "parent_frame_id";
+  }
+}
 
 /// \brief Server communication info
 struct ServerDescription

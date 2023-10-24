@@ -147,13 +147,13 @@ void RigidBodyPublisher::publish(rclcpp::Time const& time, RigidBody const& body
 
   // If timeDifference is 0 it has not yet been set
   if (timeDifference == 0){
-    RCLCPP_INFO(logger, "Initial clock sync: %.0f seconds", curTimeDifference);
+    RCLCPP_DEBUG(logger, "Initial clock sync: %.0f seconds", curTimeDifference);
     timeDifference = curTimeDifference;
   }
 
   // Clock sync can be improved if the current timeDifference is the lowest seen
   if (curTimeDifference < timeDifference){
-    RCLCPP_INFO(logger, "Improving clock sync by %.5f seconds", timeDifference - curTimeDifference);
+    RCLCPP_DEBUG(logger, "Improving clock sync by %.5f seconds", timeDifference - curTimeDifference);
     timeDifference = curTimeDifference;
   }
 

@@ -53,7 +53,8 @@ namespace mocap_optitrack
         serverDescription(serverDescr),
         publisherConfigurations(pubConfigs)
     {
-
+      m_param_callback = node->add_on_set_parameters_callback(
+          std::bind(&OptiTrackRosBridge::parametersCallback, this, std::placeholders::_1));
     }
 
     void initialize()
@@ -117,6 +118,10 @@ namespace mocap_optitrack
         }
         else
         {
+            if (serverDescription.enableOptitrack)
+            {
+              initialize();
+            }
             rclcpp::sleep_for(std::chrono::seconds(1));
         }
         // whether receive or nor, give a short break to relieft the CPU load due to while()
@@ -144,6 +149,49 @@ namespace mocap_optitrack
       return false;
     };
 
+    rcl_interfaces::msg::SetParametersResult
+    parametersCallback(std::vector<rclcpp::Parameter> parameters)
+    {
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful         = true;
+      result.reason             = "";
+
+      for (const auto& param : parameters)
+      {
+        std::stringstream ss;
+        ss << "{" << param.get_name() << ", " << param.value_to_string() << "}";
+        RCLCPP_INFO(node->get_logger(), "Got parameter: '%s'", ss.str().c_str());
+
+        std::string rigid_bodies_prefix = "rigid_bodies.";
+
+        if (!param.get_name().compare(rosparam::keys::CommandPort))
+        {
+          serverDescription.commandPort = param.as_int();
+        }
+        else if (!param.get_name().compare(rosparam::keys::DataPort))
+        {
+          serverDescription.dataPort = param.as_int();
+        }
+        else if (!param.get_name().compare(rosparam::keys::MulticastIpAddress))
+        {
+          serverDescription.multicastIpAddress = param.as_string();
+        }
+        else if (!param.get_name().compare(rosparam::keys::EnableOptitrack))
+        {
+          serverDescription.enableOptitrack = param.as_bool();
+        }
+        else
+        {
+          result.successful = false;
+          result.reason     = "Parameter is not dynamic reconfigurable";
+          RCLCPP_WARN(node->get_logger(),
+                      "Parameter %s not dynamically reconfigurable",
+                      param.get_name().c_str());
+        }
+      }
+      return result;
+    }
+
     rclcpp::Node::SharedPtr node;
     rclcpp::Clock::SharedPtr clock;
     ServerDescription serverDescription;
@@ -152,6 +200,9 @@ namespace mocap_optitrack
     std::unique_ptr<UdpMulticastSocket> multicastClientSocketPtr;
     std::unique_ptr<RigidBodyPublishDispatcher> publishDispatcherPtr;
     bool initialized = false;
+
+    rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr m_param_callback;
+
   };
 
 } // namespace

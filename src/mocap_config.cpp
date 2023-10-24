@@ -39,26 +39,6 @@ const int ServerDescription::Default::DataPort   = 9001;
 const std::string ServerDescription::Default::MulticastIpAddress = "224.0.0.251";
 const bool ServerDescription::Default::EnableOptitrack = true;
 
-// Param keys
-namespace rosparam
-{
-  namespace keys
-  {
-    const std::string MulticastIpAddress = "optitrack_config.multicast_address";
-    const std::string CommandPort = "optitrack_config.command_port";
-    const std::string DataPort = "optitrack_config.data_port";
-    const std::string EnableOptitrack = "optitrack_config/enable_optitrack";
-    const std::string Version = "optitrack_config.version";
-    const std::string RigidBodies = "rigid_bodies";
-    const std::string PoseTopicName = "pose";
-    const std::string Pose2dTopicName = "pose2d";
-    const std::string OdomTopicName = "odom";
-    const std::string EnableTfPublisher = "tf";
-    const std::string ChildFrameId = "child_frame_id";
-    const std::string ParentFrameId = "parent_frame_id";
-  }
-}
-
 ServerDescription::ServerDescription() :
   commandPort(ServerDescription::Default::CommandPort),
   dataPort(ServerDescription::Default::DataPort),
@@ -128,10 +108,16 @@ void NodeConfiguration::fromRosParam(
 
     publisherConfig.rigidBodyId = std::atoi(prefix.substr(rosparam::keys::RigidBodies.length() + 1, 1).c_str());
 
-    const bool readPoseTopicName = node->get_parameter(
-      prefix + "." + rosparam::keys::PoseTopicName, publisherConfig.poseTopicName);
+    auto param_desc = rcl_interfaces::msg::ParameterDescriptor{};
+    param_desc.read_only = true;
 
-    if (!readPoseTopicName)
+    if (node->has_parameter(prefix + "." + rosparam::keys::PoseTopicName))
+    {
+      node->undeclare_parameter(prefix + "." + rosparam::keys::PoseTopicName);
+    }
+    publisherConfig.poseTopicName = node->declare_parameter(prefix + "." + rosparam::keys::PoseTopicName,
+                                                                        "pose", param_desc);
+    if (publisherConfig.poseTopicName.empty())
     {
       RCLCPP_WARN(node->get_logger(), 
         "Failed to parse %s for body %d. Pose publishing disabled.", 
@@ -145,10 +131,13 @@ void NodeConfiguration::fromRosParam(
       publisherConfig.publishPose = true;
     }
 
-    const bool readPose2dTopicName = node->get_parameter(
-      prefix + "." + rosparam::keys::Pose2dTopicName, publisherConfig.pose2dTopicName);
-
-    if (!readPose2dTopicName)
+    if (node->has_parameter(prefix + "." + rosparam::keys::Pose2dTopicName))
+    {
+      node->undeclare_parameter(prefix + "." + rosparam::keys::Pose2dTopicName);
+    }
+    publisherConfig.pose2dTopicName = node->declare_parameter(prefix + "." + rosparam::keys::Pose2dTopicName,
+                                                              "pose2d", param_desc);
+    if (publisherConfig.pose2dTopicName.empty())
     {
       RCLCPP_WARN(node->get_logger(),
         "Failed to parse %s for body %d. Pose publishing disabled.",
@@ -162,10 +151,13 @@ void NodeConfiguration::fromRosParam(
       publisherConfig.publishPose2d = true;
     }
   
-    const bool readOdomTopicName =  node->get_parameter(prefix + "." + rosparam::keys::OdomTopicName,
-                                                       publisherConfig.odomTopicName);
-
-    if (!readOdomTopicName)
+    if (node->has_parameter(prefix + "." + rosparam::keys::OdomTopicName))
+    {
+      node->undeclare_parameter(prefix + "." + rosparam::keys::OdomTopicName);
+    }
+    publisherConfig.odomTopicName = node->declare_parameter(prefix + "." + rosparam::keys::OdomTopicName,
+                                                            "odom", param_desc);
+    if (publisherConfig.odomTopicName.empty())
     {
       RCLCPP_WARN(node->get_logger(), "Failed to parse %s for body %d. Odom publishing disabled.",
                   rosparam::keys::OdomTopicName.c_str(), publisherConfig.rigidBodyId);
@@ -176,10 +168,14 @@ void NodeConfiguration::fromRosParam(
       publisherConfig.publishOdom = true;
     }
 
-    const bool readEnableTfPublisher =  node->get_parameter(prefix + "." + rosparam::keys::EnableTfPublisher,
-                                                           publisherConfig.enableTfPublisher);
+    if (node->has_parameter(prefix + "." + rosparam::keys::EnableTfPublisher))
+    {
+      node->undeclare_parameter(prefix + "." + rosparam::keys::EnableTfPublisher);
+    }
+    publisherConfig.enableTfPublisher = node->declare_parameter(prefix + "." + rosparam::keys::EnableTfPublisher,
+                                                                "", param_desc);
 
-    if (!readEnableTfPublisher)
+    if (publisherConfig.enableTfPublisher.empty())
     {
       RCLCPP_WARN(node->get_logger(), "Failed to parse %s for body %d. TF publishing disabled.",
                   rosparam::keys::EnableTfPublisher.c_str(), publisherConfig.rigidBodyId);
@@ -190,21 +186,29 @@ void NodeConfiguration::fromRosParam(
       publisherConfig.publishTf = true;
     }
 
-    const bool readChildFrameId = node->get_parameter(
-      prefix + "." + rosparam::keys::ChildFrameId, publisherConfig.childFrameId);
-      
-    const bool readParentFrameId = node->get_parameter(
-      prefix + "." + rosparam::keys::ParentFrameId, publisherConfig.parentFrameId);
-
-    if (!readChildFrameId || !readParentFrameId)
+    if (node->has_parameter(prefix + "." + rosparam::keys::ChildFrameId))
     {
-      if (!readChildFrameId)
+      node->undeclare_parameter(prefix + "." + rosparam::keys::ChildFrameId);
+    }
+    publisherConfig.childFrameId = node->declare_parameter(prefix + "." + rosparam::keys::ChildFrameId,
+                                                           "base_link", param_desc);
+      
+    if (node->has_parameter(prefix + "." + rosparam::keys::ParentFrameId))
+    {
+      node->undeclare_parameter(prefix + "." + rosparam::keys::ParentFrameId);
+    }
+    publisherConfig.parentFrameId = node->declare_parameter(prefix + "." + rosparam::keys::ParentFrameId,
+                                                           "world", param_desc);
+
+    if (publisherConfig.childFrameId.empty() || publisherConfig.parentFrameId.empty())
+    {
+      if (publisherConfig.childFrameId.empty())
         RCLCPP_WARN(node->get_logger(),
           "Failed to parse %s for body %d. TF publishing disabled.",
             rosparam::keys::ChildFrameId.c_str(),
             publisherConfig.rigidBodyId);
 
-      if (!readParentFrameId)
+      if (publisherConfig.parentFrameId.empty())
         RCLCPP_WARN(node->get_logger(),
           "Failed to parse %s for body %d. TF publishing disabled.",
           rosparam::keys::ParentFrameId.c_str(),
