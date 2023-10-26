@@ -2,8 +2,8 @@
 Changelog for package mocap_optitrack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.0 (2023-10-26)
+------------------
 * Feat: implement ros1 features and fixes
 * Removed wrong and undesired transformation
 * Implemented optitrack timestamp
