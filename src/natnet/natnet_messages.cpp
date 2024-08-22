@@ -197,6 +197,11 @@ void DataFrameMessage::deserialize(
   ROS_DEBUG("Marker set count: %d", numMarkerSets);
   dataFrame->markerSets.resize(numMarkerSets);
 
+  if (NatNetVersion.v_major >= 4 and NatNetVersion.v_minor > 0) {
+    // NatNet version > 4.0: size of all data for this data type (in bytes);
+    msgBufferIter += 4;
+  }
+
   // Loop through number of marker sets and get name and data
   // TODO: Whether this correctly parses marker sets has not been tested
   int icnt = 0;
@@ -230,6 +235,11 @@ void DataFrameMessage::deserialize(
   dataFrame->otherMarkers.resize(numUnlabeledMarkers);
   ROS_DEBUG("Unlabled marker count: %d", numUnlabeledMarkers);
 
+  if (NatNetVersion.v_major >= 4 and NatNetVersion.v_minor > 0) {
+    // NatNet version > 4.0: size of all data for this data type (in bytes);
+    msgBufferIter += 4;
+  }
+
   // Loop over unlabled markers
   icnt = 0;
   for (auto& marker : dataFrame->otherMarkers)
@@ -248,6 +258,11 @@ void DataFrameMessage::deserialize(
   dataFrame->rigidBodies.resize(numRigidBodies);
   ROS_DEBUG("Rigid count: %d", numRigidBodies);
 
+  if (NatNetVersion.v_major >= 4 and NatNetVersion.v_minor > 0) {
+    // NatNet version > 4.0: size of all data for this data type (in bytes);
+    msgBufferIter += 4;
+  }
+
   // Loop over rigid bodies
   for (auto& rigidBody : dataFrame->rigidBodies)
   {
@@ -264,6 +279,12 @@ void DataFrameMessage::deserialize(
     int numSkeletons = 0;
     utilities::read_and_seek(msgBufferIter, numSkeletons);
     ROS_DEBUG("Skeleton count: %d", numSkeletons);
+
+    // TODO: check how to handle skeletons
+//    if (NatNetVersion > mocap_optitrack::Version("4.0")){
+//      // version > 4.0: size of all data for this data type (in bytes);
+//      msgBufferIter += 4;
+//    }
 
     // Loop through skeletons
     for (int j=0; j < numSkeletons; j++)
@@ -287,6 +308,24 @@ void DataFrameMessage::deserialize(
       } // next rigid body
     } // next skeleton
   }
+
+//  // assets (NatNet version 4.0 and later)  // TODO: finish this part
+//  if (NatNetVersion >= mocap_optitrack::Version("4.0"))
+//  {
+//    ROS_ERROR("*** ASSETS ***");
+//        int numAssets = 0;
+//        utilities::read_and_seek(msgBufferIter, numAssets);
+//        ROS_ERROR("Asset count: %d", numAssets);
+//
+//        // version > 4.0: size of all data for this data type (in bytes);
+//        msgBufferIter += 4;
+//
+//        // Loop through assets
+//        for (int j=0; j < numAssets; j++)
+//        {
+//
+//        }
+//  }
 
   // Labeled markers (NatNet version 2.3 and later)
   // TODO: like skeletons, labeled markers are not accounted for
@@ -505,7 +544,7 @@ void MessageDispatcher::dispatch(
     }
     else
     {
-      ROS_WARN("Client has not received server info request. Parsing data message aborted.");
+      ROS_WARN_THROTTLE(1, "Client has not received server info request. Parsing data message aborted.");
     }
     return;
   }
@@ -514,9 +553,9 @@ void MessageDispatcher::dispatch(
   {
     natnet::ServerInfoMessage msg;
     msg.deserialize(msgBuffer, dataModel);
-    ROS_INFO_ONCE("NATNet Version : %s", 
+    ROS_WARN_THROTTLE(1, "NATNet Version : %s",
       dataModel->getNatNetVersion().getVersionString().c_str());
-    ROS_INFO_ONCE("Server Version : %s", 
+    ROS_WARN_THROTTLE(1, "Server Version : %s",
       dataModel->getServerVersion().getVersionString().c_str());
     return;
   }

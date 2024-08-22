@@ -57,6 +57,10 @@ public:
     publisherConfigurations = pubConfigs;
   }
 
+  ~OptiTrackRosBridge() {
+    multicastClientSocketPtr.reset();
+  };
+
   void reconfigureCallback(MocapOptitrackConfig& config, uint32_t)
   {
     serverDescription.enableOptitrack = config.enable_optitrack;
@@ -81,9 +85,9 @@ public:
         dataModel.setVersions(&serverDescription.version[0], &serverDescription.version[0]);
       }
 
-      // Need verion information from the server to properly decode any of their packets.
-      // If we have not recieved that yet, send another request.
-      while (ros::ok() && !dataModel.hasServerInfo())
+      // Need version information from the server to properly decode any of their packets.
+      // If we have not received that yet, send another request.
+      while (ros::ok())
       {
         natnet::ConnectionRequestMessage connectionRequestMsg;
         natnet::MessageBuffer connectionRequestMsgBuffer;
@@ -96,24 +100,29 @@ public:
         else sleep(1);
 
         ros::spinOnce();
+
+        if (dataModel.hasServerInfo())
+          break;
       }
       // Once we have the server info, create publishers
       publishDispatcherPtr.reset(
         new RigidBodyPublishDispatcher(nh,
                                        dataModel.getNatNetVersion(),
                                        publisherConfigurations));
-      ROS_INFO("Initialization complete");
+      ROS_WARN("Initialization is completed.");
       initialized = true;
     }
     else
     {
-      ROS_INFO("Initialization incomplete");
+      ROS_WARN("enableOptitrack is False. Initialization is uncompleted.");
       initialized = false;
     }
   };
 
   void run()
   {
+    ROS_WARN("Running...");
+
     while (ros::ok())
     {
       if (initialized)
