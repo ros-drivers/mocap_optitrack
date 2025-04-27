@@ -163,7 +163,6 @@ namespace mocap_optitrack
         RCLCPP_INFO(node->get_logger(), "Got parameter: '%s'", ss.str().c_str());
 
         std::string rigid_bodies_prefix = "rigid_bodies.";
-
         if (!param.get_name().compare(rosparam::keys::CommandPort))
         {
           serverDescription.commandPort = param.as_int();
@@ -179,6 +178,23 @@ namespace mocap_optitrack
         else if (!param.get_name().compare(rosparam::keys::EnableOptitrack))
         {
           serverDescription.enableOptitrack = param.as_bool();
+        }
+        //In ROS humble qos is added as parameter, these lines add this to catch the exception, but overriding QOS is not implemented
+        else if (!param.get_name().compare(rosparam::keys::QosOverrideDurability))
+        {
+          serverDescription.QosOverrideDurability = param.as_string();
+        }
+        else if (!param.get_name().compare(rosparam::keys::QosOverrideHistory))
+        {
+          serverDescription.QosOverrideHistory = param.as_string();
+        }
+        else if (!param.get_name().compare(rosparam::keys::QosOverrideDepth))
+        {
+          serverDescription.QosOverrideDepth = param.as_int();
+        }
+        else if (!param.get_name().compare(rosparam::keys::QosOverrideReliability))
+        {
+          serverDescription.QosOverrideReliability = param.as_string();
         }
         else
         {

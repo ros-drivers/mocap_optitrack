@@ -54,6 +54,10 @@ namespace rosparam
     const std::string EnableTfPublisher = "tf";
     const std::string ChildFrameId = "child_frame_id";
     const std::string ParentFrameId = "parent_frame_id";
+    const std::string QosOverrideDurability = "qos_overrides./tf.publisher.durability";
+    const std::string QosOverrideHistory = "qos_overrides./tf.publisher.history";
+    const std::string QosOverrideDepth = "qos_overrides./tf.publisher.depth";
+    const std::string QosOverrideReliability = "qos_overrides./tf.publisher.reliability";
   }
 }
 
@@ -66,6 +70,10 @@ struct ServerDescription
     static const int DataPort;
     static const std::string MulticastIpAddress;
     static const bool EnableOptitrack;
+    static const std::string QosOverrideDurability;
+    static const std::string QosOverrideHistory;
+    static const int QosOverrideDepth;
+    static const std::string QosOverrideReliability;
   };
 
   ServerDescription();
@@ -74,6 +82,10 @@ struct ServerDescription
   std::string multicastIpAddress;
   bool enableOptitrack;
   std::vector<int64_t> version;
+  std::string QosOverrideDurability;
+  std::string QosOverrideHistory;
+  int QosOverrideDepth;
+  std::string QosOverrideReliability;
 };
 
 /// \brief ROS publisher configuration

@@ -46,12 +46,12 @@ namespace utilities
     {
       // Motive 1.7+ and < Motive 2.0 coordinate system
       poseStampedMsg.pose.position.x = -body.pose.position.x;
-      poseStampedMsg.pose.position.y = body.pose.position.z;
-      poseStampedMsg.pose.position.z = body.pose.position.y;
+      poseStampedMsg.pose.position.y = body.pose.position.y;
+      poseStampedMsg.pose.position.z = body.pose.position.z;
 
       poseStampedMsg.pose.orientation.x = -body.pose.orientation.x;
-      poseStampedMsg.pose.orientation.y = body.pose.orientation.z;
-      poseStampedMsg.pose.orientation.z = body.pose.orientation.y;
+      poseStampedMsg.pose.orientation.y = body.pose.orientation.y;
+      poseStampedMsg.pose.orientation.z = body.pose.orientation.z;
       poseStampedMsg.pose.orientation.w = body.pose.orientation.w;
     }
     else
@@ -59,12 +59,12 @@ namespace utilities
       // y & z axes are swapped in the Optitrack coordinate system
       // Also compatible with versions > Motive 2.0
       poseStampedMsg.pose.position.x = body.pose.position.x;
-      poseStampedMsg.pose.position.y = -body.pose.position.z;
-      poseStampedMsg.pose.position.z = body.pose.position.y;
+      poseStampedMsg.pose.position.y = -body.pose.position.y;
+      poseStampedMsg.pose.position.z = body.pose.position.z;
 
       poseStampedMsg.pose.orientation.x = body.pose.orientation.x;
-      poseStampedMsg.pose.orientation.y = -body.pose.orientation.z;
-      poseStampedMsg.pose.orientation.z = body.pose.orientation.y;
+      poseStampedMsg.pose.orientation.y = -body.pose.orientation.y;
+      poseStampedMsg.pose.orientation.z = body.pose.orientation.z;
       poseStampedMsg.pose.orientation.w = body.pose.orientation.w;
     }
     return poseStampedMsg;
@@ -77,12 +77,12 @@ nav_msgs::msg::Odometry getRosOdom(RigidBody const& body, const Version& coordin
     {
       // Motive 1.7+ and < Motive 2.0 coordinate system
       OdometryMsg.pose.pose.position.x = -body.pose.position.x;
-      OdometryMsg.pose.pose.position.y = body.pose.position.z;
-      OdometryMsg.pose.pose.position.z = body.pose.position.y;
+      OdometryMsg.pose.pose.position.y = body.pose.position.y;
+      OdometryMsg.pose.pose.position.z = body.pose.position.z;
 
       OdometryMsg.pose.pose.orientation.x = -body.pose.orientation.x;
-      OdometryMsg.pose.pose.orientation.y = body.pose.orientation.z;
-      OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
+      OdometryMsg.pose.pose.orientation.y = body.pose.orientation.y;
+      OdometryMsg.pose.pose.orientation.z = body.pose.orientation.z;
       OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
     }
     else
@@ -90,12 +90,12 @@ nav_msgs::msg::Odometry getRosOdom(RigidBody const& body, const Version& coordin
       // y & z axes are swapped in the Optitrack coordinate system
       // Also compatible with versions > Motive 2.0
       OdometryMsg.pose.pose.position.x = body.pose.position.x;
-      OdometryMsg.pose.pose.position.y = -body.pose.position.z;
-      OdometryMsg.pose.pose.position.z = body.pose.position.y;
+      OdometryMsg.pose.pose.position.y = -body.pose.position.y;
+      OdometryMsg.pose.pose.position.z = body.pose.position.z;
 
       OdometryMsg.pose.pose.orientation.x = body.pose.orientation.x;
-      OdometryMsg.pose.pose.orientation.y = -body.pose.orientation.z;
-      OdometryMsg.pose.pose.orientation.z = body.pose.orientation.y;
+      OdometryMsg.pose.pose.orientation.y = -body.pose.orientation.y;
+      OdometryMsg.pose.pose.orientation.z = body.pose.orientation.z;
       OdometryMsg.pose.pose.orientation.w = body.pose.orientation.w;
     }
     return OdometryMsg;
